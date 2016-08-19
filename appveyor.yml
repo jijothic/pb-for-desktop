@@ -1,0 +1,28 @@
+platform:
+  - x64
+
+os: Visual Studio 2015
+
+cache:
+  - node_modules
+  - '%APPDATA%\npm-cache'
+  - '%USERPROFILE%\.electron'
+
+init:
+  - git config --global core.autocrlf input
+
+install:
+  - ps: Install-Product node '' x64
+  - git reset --hard HEAD
+  - npm install npm --global --verbose
+  - npm install --verbose
+  - npm prune --verbose
+
+test_script:
+  - node --version
+  - npm --version
+  
+build_script:
+  - npm run-script build win32
+  - npm run-script deploy-github
+

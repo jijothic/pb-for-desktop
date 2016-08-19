@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pushbullet for Desktop</title>
+</head>
+<link rel="stylesheet" type="text/css" href="styles/ionicons.css">
+<link rel="stylesheet" type="text/css" href="styles/styles.css">
+<body>
+
+    <div id="overlay-spinner">
+        <div id="overlay-spinner-logo"></div>
+    </div>
+
+    <div id="overlay-controls">
+        <span id="overlay-controls-home">
+            <div class="title">Home</div>
+            <i class="icon ion-home"></i>
+        </span>
+    </div>
+
+    <webview id="webview"
+             src="https://pushbullet.com"
+             preload="./scripts/browser.js"
+             autosize="on"
+             minwidth="400"
+             disablewebsecurity="on"
+             allowpopups="on">
+    </webview>
+
+    <script src="./scripts/webview.js"></script>
+
+</body>
+</html>
