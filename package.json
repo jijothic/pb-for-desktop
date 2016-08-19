@@ -1,8 +1,8 @@
 {
   "name": "pushbullet-desktop",
   "productName": "Pushbullet for Desktop",
-  "version": "1.9.93",
-  "description": "Cross-platform Pushbullet desktop app",
+  "version": "1.9.94",
+  "description": "Pushbullet Desktop application",
   "license": "MIT",
   "author": {
     "name": "sidneys",

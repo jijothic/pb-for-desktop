@@ -24,5 +24,16 @@ test_script:
   
 build_script:
   - npm run-script build win32
-  - npm run-script deploy-github
 
+deploy:
+  provider: GitHub
+  description: 'Release'
+  auth_token:
+    secure: lCnXgfABbIDbDjEGA1FAVVPKmJkQ3PapIUJiGzFqP6lgz1q+oza9QSoN7eh74aip
+  artifact: /.*\.zip/
+  draft: true
+  prerelease: false
+  force_update: true
+  on:
+    branch: release
+    

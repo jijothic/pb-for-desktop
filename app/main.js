@@ -315,7 +315,7 @@ const DEFAULT_EVENTS = {
         notificationFile: function(items) {
             if (items) {
                 validateFileType(items, 'audio', function(err, file) {
-                    if (err) { return logger.logErr(err); }
+                    if (err) { return logger.error(err); }
                     electronSettings.set('app.notificationFile', file).then(() => {});
 
                     electronSettings.get('app.windowPosition')
@@ -344,7 +344,7 @@ app.on('ready', () => {
 
     // Init Log Directory
     mkdirp(appLogDirectory, (err) => {
-        if (err) { return logger.logErr('appLogDirectory', err); }
+        if (err) { return logger.error('appLogDirectory', err); }
     });
 
     // Add globals to Electrons 'global'
