@@ -1,15 +1,31 @@
-# Pushbullet for Desktop [![Join the chat at https://gitter.im/sidneys/pushbullet-desktop](https://badges.gitter.im/sidneys/pushbullet-desktop.svg)](https://gitter.im/sidneys/pushbullet-desktop?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![build status](http://img.shields.io/travis/sidneys/pushbullet-desktop.svg?style=flat)](http://travis-ci.org/sidneys/pushbullet-desktop) [![issues](https://img.shields.io/github/issues/sidneys/pushbullet-desktop.svg)](https://github.com/sidneys/pushbullet-desktop/issues)  
+# Pushbullet for Desktop    
+
+[![Build status](https://ci.appveyor.com/api/projects/status/d69sb6iav7tnrldq?svg=true)](https://ci.appveyor.com/project/sidneys/pushbullet-desktop) [![build status](http://img.shields.io/travis/sidneys/pushbullet-desktop.svg?style=flat)](http://travis-ci.org/sidneys/pushbullet-desktop) [![issues](https://img.shields.io/github/issues/sidneys/pushbullet-desktop.svg)](https://github.com/sidneys/pushbullet-desktop/issues) [![Join the chat at https://gitter.im/sidneys/pushbullet-desktop](https://badges.gitter.im/sidneys/pushbullet-desktop.svg)](https://gitter.im/sidneys/pushbullet-desktop?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  
+
+---
+
 **Pushbullet for Desktop** is a lightweight & unobstrusive cross-platform client for [PushBullet](https://pushbullet.com/).
 
 Receive native push notifications on OS X, Windows and Linux.
 
 *Not affiliated with PushBullet Inc..*
 
-## Features
 
-**Native System Notifications**
+## Contents
 
-*No Chrome required.*
+1. [Features](#features)
+2. [Installation](#installation)
+3. [CLI](#cli)
+4. [Developers](#developers)
+5. [How to Build](#how-to-build)
+6. [Author](#author)
+7. [License](#license)
+
+
+## <a name="features"/>Features
+
+**Native Notifications**
+
 Uses the macOS Notification Center and the Windows 10 Action Center.
 
 **Unobstrusive**
@@ -21,88 +37,122 @@ Small resource footprint - runs as a macOS Menu Bar app or a Windows System Tray
 No wrestling with API-Keys or other technical knowledge required.
 Login to Pushbullet using Google or Facebook.
 
-**Content & Channel Image Previews**
+**Channel Images**
 
-- Channel-specific notification images ([IFTTT](https://ifttt.com/), [Zapier](https://zapier.com/) or [Pushbullet Chat](http://lifehacker.com/huge-pushbullet-update-adds-instant-messaging-chat-hea-1714870644))
-- In-Notification image previews
+Channel-specific  (e.g. [IFTTT](https://ifttt.com/), [Zapier](https://zapier.com/), [Chat](http://lifehacker.com/huge-pushbullet-update-adds-instant-messaging-chat-hea-1714870644)) icon images for most notifications.
 
-**Custom Notification Sound**
+**Image Thumbnails**
 
-Use the default Pushbullet notification sound or one of your choice.
+Preview thumbnails for pushes containing images.
 
-**👾 Notification Emoji Tags **
+**Custom Sound Effects**
 
-Use custom tags within notifications for easy identification of content types.
+Use the default Pushbullet sound or one of your choice.
 
-Example: Prefix the YouTube-Feed with **{video}** to show a 📺 within Notifications.
+**Notification Emoji** 👾
 
-## Installation
+Use tags to add Emojis to notifications.
 
-Download the latest release:
+*Examples*
 
-[Pushbullet for Desktop Releases](https://github.com/sidneys/pushbullet-desktop/releases)
+- Add **{video}** to YouTube pushes to show a 📺 in front of notifications
+- Add **{social}** to reddit pushes with to show a 🍻 with notifications
 
-## Commandline Usage
 
-Install the global package::
 
+## <a name="installation"/>Installation
+
+Download the latest version on the [Releases page](https://github.com/sidneys/pushbullet-desktop/releases).
+
+
+
+## <a name="cli"/>CLI
+
+Install the global node package
+
+```bash
+npm install --global pushbullet-desktop
 ```
-npm install --global live-wallpaper-ecorp
-```
 
-Run it:
+Run it
 
-```
+```bash
 pushbullet-desktop
 ```
 
-## Development
 
-### Prepare Environment
+
+## <a name="developers"/>Developers
+
+### Environment
 
 After cloning, install the required packages:
 
-```
+```bash
 npm install
 ```
 
 Fire up a local Electron instance:
 
-```
+```bash
 ./node_modules/.bin/electron ./app/main.js
 ```
 
-## Building
 
-### Requirements
 
-- Building the Windows app requires [wine](https://winehq.org) and [mono](https://nsis.sourceforge.net/Docs/Chapter3.htm)
-- Building the Linux app requires [fakeroot](https://wiki.debian.org/FakeRoot) and [dpkg](https://wiki.ubuntuusers.de/dpkg/)
+## <a name="how-to-build"/>How to Build
 
-To install all those it on OSX using [Homebrew](https://brew.sh):
+### Prerequisites
 
-```
+All platforms can only be built on macOS. Building the Windows binaries on macOS or Linux moreover requires [wine](https://winehq.org) and [mono](https://nsis.sourceforge.net/Docs/Chapter3.htm), whereas building for Linux requires [fakeroot](https://wiki.debian.org/FakeRoot) and [dpkg](https://wiki.ubuntuusers.de/dpkg/).
+
+To install these prerequisites on macOS (using [Homebrew](https://brew.sh)), run:
+
+```bash
 brew install --verbose wine mono
 brew install --verbose fakeroot dpkg
 ```
 
-### Running a Build
+### To build all platforms
 
-To build a platform:
+To build binaries for all platforms (which can be built under the current platform), run:
 
-```
+```bash
 npm run build <darwin|linux|win32>
 ```
 
-To build all platforms (OSX only):
+### To build a specific platform
 
-```
-npm run build <darwin|linux|win32>
+#### macOS
+
+```bash
+npm run build darwin
 ```
 
-## Author
+#### Windows
+
+```bash
+npm run build win32
+```
+
+#### Linux
+
+```bash
+npm run build linux
+```
+
+### Artifacts
+
+Build artifacts will be placed within **pushbullet-desktop/build/releases**.
+
+
+
+## <a name="author"/>Author
 
 [sidneys](http://sidneys.github.io)
 
 
 
+## <a name="license"/>License
+
+MIT

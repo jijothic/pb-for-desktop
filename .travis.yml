@@ -22,9 +22,10 @@ cache:
     - build/cache
 
 before_install:
-  - rvm cleanup all --auto-dotfiles --verbose; rvm get latest --verbose
-  - gem update --system --no-document --verbose; gem update --verbose
-  - rvm get stable --auto-dotfiles
+  - rvm cleanup all --verbose
+  - rvm get latest --auto-dotfiles --verbose
+  - gem update --system --no-document --verbose
+  - gem update --verbose
   - curl -o- https://raw.githubusercontent.com/creationix/nvm/master/install.sh | NVM_DIR=$HOME/.nvm sh
   - source $HOME/.nvm/nvm.sh
   - command -v nvm
@@ -43,16 +44,20 @@ before_script:
   - npm prune --verbose
 
 script:
-  - npm run-script build darwin linux
+  - DEBUG=1 npm run build darwin linux
+
+before_deploy:
+  - export DEPLOY_PACKAGES="$(ls ./build/release/*v*.zip)"
+  - echo "Deploying to GitHub:"
+  - echo "${DEPLOY_PACKAGES[@]}"
 
 deploy:
   provider: releases
+  file_glob: true
+  file: "./build/release/*v*.zip"
+  skip_cleanup: true
   api_key:
     secure: nncJXVV1dDG0Tqdtm+U2P1kjbBJWJLBmq0T+6oDMjue6JAXai0zR/TlvqjtF844Bz4GkxDnzP8tWS8fxbUki+0cESd7SBrYLsnFicqhwUAu16eTuPX98R92m8EHYjruY+epHu7PRufokSJGhTSU8sMSM+jBWp6T8zw3653P5F5kTZ6hp/ujmji8VQoU/eS4o1wE+z3m99V1DBgnqCqbL3P11QH0RU0/eEkCrZF2YmSu6fXaL3utpyYxfA8g5CGOKMQb9Bte7gBdc9CcKsMVNfpg8Q4X7IB0GB3qfnBN4+DCgXae9ATHATnSQQ0XkJER5Trh7IJEJ5ReD6hrtpERUjNxbJATTgKzi73iFbgdERrdE1LEibmD/rAourVufW5Wd832ATjM9cNFEaovxZv2LTLdtMAdpewc3OmjXE2TAmSv+HjpGWHX0+dI3sTfrvH0sUK1GkydSyBYnKiwOJEdDDzOD8MccTFf+5qwT33aOZwWIwxXopOVxJf+g3eUD80ftZGYlV4OIDMRQWIkOIW/3hdk3voKFC/s47nEE6Aq60qg9f7OvmzUS4oTPLGzj4SJ4fqpGJG8XWYyOJaHiwu2Plbrg1SD0DA+ncXlsJR5rjLSLTgeGshkKQVfPNi2SgaEupZRY139pXiE9izB2K23gVcmaoZD0F0mE/qJZfE0jYLU=
-  file:
-    - "./build/release/pushbullet_for_desktop-darwin-x64.zip"
-    - "./build/release/pushbullet_for_desktop-linux-ia32.zip"
-    - "./build/release/pushbullet_for_desktop-linux-x64.zip"
   on:
     repo: sidneys/pushbullet-desktop
     branch: release

@@ -1,7 +1,7 @@
 {
   "name": "pushbullet-desktop",
   "productName": "Pushbullet for Desktop",
-  "version": "1.9.94",
+  "version": "1.9.95",
   "description": "Pushbullet Desktop application",
   "license": "MIT",
   "author": {
@@ -68,7 +68,7 @@
     "string-format-obj": "^1.1.0"
   },
   "devDependencies": {
-    "electron-packager": "^7.6.0",
+    "electron-packager": "^7.7.0",
     "filesize": "^3.3.0",
     "glob": "^7.0.5",
     "mkdirp": "^0.5.1",

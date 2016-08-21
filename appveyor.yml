@@ -3,6 +3,15 @@ os: Visual Studio 2015
 platform:
   - x64
 
+branches:
+  only:
+  - release
+
+clone_depth: 3
+
+environment:
+  DEBUG: electron-windows-installer:main
+
 cache:
   - node_modules
   - '%APPDATA%\npm-cache'
@@ -13,10 +22,12 @@ init:
 
 install:
   - ps: Install-Product node '' x64
-  - git reset --hard HEAD
-  - npm install npm --global --verbose
-  - npm install --verbose
-  - npm prune --verbose
+  - cmd: node -p "require('./package.json').version" > VERSION.txt
+  - cmd: set /p NODE_PACKAGE_VERSION=<VERSION.txt
+  - cmd: echo %NODE_PACKAGE_VERSION%
+  - npm install npm --global
+  - npm install
+  - npm prune
 
 test_script:
   - node --version
@@ -25,12 +36,19 @@ test_script:
 build_script:
   - npm run-script build win32
 
+build:
+  publish_nuget: true
+  verbosity: minimal
+
+nuget:
+  project_feed: true
+
 deploy:
   provider: GitHub
   description: 'Release'
   auth_token:
     secure: lCnXgfABbIDbDjEGA1FAVVPKmJkQ3PapIUJiGzFqP6lgz1q+oza9QSoN7eh74aip
-  artifact: /.*\.zip/
+  artifact: 'build\releases\pushbullet_for_desktop-win32-x64-v$(node_package_version).zip, build\releases\pushbullet_for_desktop-win32-ia32-v$(node_package_version).zip'
   draft: true
   prerelease: false
   force_update: true
