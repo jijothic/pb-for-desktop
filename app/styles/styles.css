@@ -1,21 +1,35 @@
-/*!
-  Global
-*/
+/* ==========================================================================
+   GLOBAL
+   ========================================================================== */
+
+/* html
+   ========================================================================== */
+
 html {
     font-size: 62.5%;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
+    background-color: transparent;
 }
 
+
+
+/* body
+   ========================================================================== */
+
 body {
-    overflow-x: hidden;
     margin: 0;
     padding: 0;
 }
 
-/*!
-  Webview
-*/
+
+
+/* ==========================================================================
+   COMPONENTS
+   ========================================================================== */
+
+/* #webview
+   ========================================================================== */
+
 webview {
     display: inline-flex;
     position: absolute;
@@ -23,9 +37,11 @@ webview {
     height: 100%;
 }
 
-/*!
-  Spinner
-*/
+
+
+/* #overlay-spinner
+   ========================================================================== */
+
 #overlay-spinner {
     z-index: 1337;
     display: flex; /* establish flex container */
@@ -43,10 +59,14 @@ webview {
     transition: visibility 1s, opacity 1s ease-in-out;
 }
 
+
+
 #overlay-spinner.hidden {
     opacity: 0;
     visibility: hidden;
 }
+
+
 
 #overlay-spinner-logo {
     z-index: 13370;
@@ -63,6 +83,8 @@ webview {
     animation: rotating 1s ease-in-out infinite;
 }
 
+
+
 #overlay-spinner-logo:after {
     background: rgb(74, 179, 103) -webkit-linear-gradient(hsla(0, 0%, 100%, .25), hsla(0, 0%, 0%, .25));
     bottom: 0;
@@ -76,6 +98,8 @@ webview {
     z-index: -10;
 }
 
+
+
 #overlay-spinner-logo:before {
     background: rgb(74, 179, 103) -webkit-linear-gradient(hsla(0, 0%, 100%, .25), hsla(0, 0%, 0%, .25));
     border-radius: 100%;
@@ -88,13 +112,52 @@ webview {
     width: 100px;
 }
 
+
+
 #overlay-spinner-logo:hover {
     transform: rotateY(90deg);
 }
 
-/*!
-  Animations
-*/
+
+
+/* ==========================================================================
+   STATES
+   ========================================================================== */
+
+/* .draggable
+   ========================================================================== */
+
+.draggable {
+    -webkit-app-region: drag;
+}
+
+
+
+/* .show
+   .hide
+   ========================================================================== */
+
+.hide {
+    visibility: hidden;
+    opacity: 0;
+}
+
+
+
+.show {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+/* @keyframes rotating
+   ========================================================================== */
+
 @-webkit-keyframes rotating {
     from {
         -webkit-transform: rotateY(0deg);
@@ -105,6 +168,8 @@ webview {
         transform: rotateY(360deg);
     }
 }
+
+
 
 @keyframes rotating {
     from {
@@ -117,16 +182,22 @@ webview {
     }
 }
 
-/*!
-  Buttons
-*/
+
+
+/* ==========================================================================
+   CONTROLS
+   ========================================================================== */
+
+/* #overlay-controls
+   ========================================================================== */
+
 #overlay-controls {
     position: fixed;
     bottom: 20px;
     left: 20px;
     border-radius: 100px;
     background-color: rgba(255, 255, 255, 0.8);
-    border: 1px solid #CED1D5;
+    border: 1px solid #ced1d5;
     padding: 12px;
     font-size: 16px;
     z-index: 100;
@@ -138,11 +209,15 @@ webview {
     transition-timing-function: ease-in-out, linear;
 }
 
+
+
 #overlay-controls.hidden {
     opacity: 0;
     visibility: collapse;
     transition-delay: 0s, 150ms;
 }
+
+
 
 #overlay-controls-home {
     transition: 0.25s;
@@ -151,6 +226,8 @@ webview {
     text-decoration: underline;
 }
 
+
+
 #overlay-controls .title {
     float: left;
     color: #95a5a6;
@@ -158,14 +235,18 @@ webview {
     line-height: 26px;
     overflow: hidden;
     white-space: nowrap;
-    width: 0px;
-    padding-left: 0px;
+    width: 0;
+    padding-left: 0;
     transition: all 0.25s ease-in-out;
 }
+
+
 
 #overlay-controls:hover {
     background-color: rgba(255, 255, 255, 1.0);
 }
+
+
 
 #overlay-controls:hover .title {
     width: 75px;
@@ -173,12 +254,14 @@ webview {
     transition: all 0.25s ease-in-out;
 }
 
+
+
 #overlay-controls .icon {
     float: right;
     color: #95a5a6;
     width: 26px;
     height: 26px;
-    padding: 0px;
+    padding: 0;
     font-size: 28px;
     line-height: 26px;
     text-align: center;

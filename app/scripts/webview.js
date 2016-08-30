@@ -9,11 +9,14 @@ const path = require('path'),
     util = require('util'),
     url = require('url');
 
+
+
 /**
  * @global
  * @constant
  */
 const moduleRoot = path.join(__dirname, '..');
+
 
 
 /**
@@ -23,12 +26,14 @@ const moduleRoot = path.join(__dirname, '..');
 const packageJson = require(path.join(moduleRoot, 'package.json'));
 
 
+
 /**
  * Modules: Electron
  * @global
  */
 const electron = require('electron');
 const { ipcRenderer, remote } = electron;
+
 
 
 /**
@@ -40,17 +45,40 @@ let webview = document.getElementById('webview'),
     overlayControlsHome = document.getElementById('overlay-controls-home');
 
 
-/**
- * Log
- */
-var logDefault = console.log;
-console.debug = function() {
-    let args = Array.from(arguments),
-        label = args.shift();
 
-    ipcRenderer.send('log', arguments);
-    logDefault.apply(this, ['%c%s%c%s%c %c%s', 'font-weight: bold; background: #4AB367; color: white;', '[' + packageJson.name.toUpperCase() + ']', 'background: #4AB367; color: white; padding: 0 2px 0 0', '[' + label + ']', '', 'font-weight: bold', util.format.apply(null, args)]);
+/**
+ * Logger
+ */
+let logDefault = console.log;
+console.debug = function() {
+    let self = this,
+        packageName = packageJson.name.toUpperCase(),
+        messageList = Array.from(arguments),
+        messageLabel = messageList.shift(),
+        messageListFormatted = util.format.apply(null, messageList);
+
+    // Add brackets
+    packageName = '[' + packageName + ']';
+    messageLabel = '[' + messageLabel + ']';
+
+    // Show in console
+    logDefault.apply(self, [
+        '%c%s%c%s%c %c%s', 'font-weight: bold; background: #4AB367; color: white;',
+        packageName,
+        'background: #4AB367; color: white; padding: 0 2px 0 0',
+        messageLabel,
+        '',
+        'font-weight: bold',
+        messageListFormatted
+    ]);
+
+    // Send to main process
+    ipcRenderer.send('log', [
+        messageLabel,
+        messageListFormatted
+    ]);
 };
+
 
 
 /**
@@ -63,6 +91,8 @@ webview.addEventListener('did-finish-load', () => {
         webview.openDevTools();
     }
 });
+
+
 
 /**
  * Event: new-window
@@ -77,6 +107,8 @@ webview.addEventListener('new-window', (ev) => {
     // DEBUG
     // console.debug('Event', 'new-window', ev.url);
 });
+
+
 
 /**
  * Event: will-navigate
@@ -96,6 +128,8 @@ webview.addEventListener('load-commit', (ev) => {
             overlayControls.classList.add('hidden');
     }
 });
+
+
 
 /**
  * Event: click

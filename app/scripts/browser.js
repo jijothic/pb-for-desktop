@@ -8,12 +8,17 @@
 const path = require('path'),
     util = require('util');
 
+
+
+//noinspection NpmUsedModulesInstalled
 /**
  * Modules: Electron
  * @global
  */
 const electron = require('electron');
 const { ipcRenderer, remote } = electron;
+
+
 
 /**
  * Modules: Third Party
@@ -25,17 +30,23 @@ const moduleRoot = path.join(__dirname, '..', '..'),
     fileUrl = require('file-url'),
     stringFormat = require('string-format-obj');
 
+
+
 /**
  * Modules: Internal
  * @global
  */
 const packageJson = require(path.join(moduleRoot, 'package.json'));
 
+
+
 /**
  * Settings
  * @global
  */
 let electronSettings = remote.getGlobal('electronSettings');
+
+
 
 /**
  * Play Audio
@@ -59,6 +70,7 @@ let playSoundFile = function(filePath, cb) {
 };
 
 
+
 /**
  * Notification
  * @constant
@@ -66,6 +78,7 @@ let playSoundFile = function(filePath, cb) {
  */
 let maxNotificationsPerSecond = 0.5,
     maxRecentNotifications = 10;
+
 
 
 /**
@@ -83,6 +96,7 @@ const NotificationDefaults = {
 };
 
 
+
 /**
  * Notification Tags
  * @global
@@ -98,6 +112,7 @@ const notificationTags = {
 };
 
 
+
 /**
  * Parse Notification Tags
  * @param {String} content - Notification Content
@@ -109,6 +124,7 @@ const notificationTags = {
 let parseNotificationTags = function(content, dictionary) {
     return stringFormat(content, dictionary);
 };
+
 
 
 /**
@@ -130,17 +146,40 @@ let removeNotificationTags = function(content, dictionary) {
 };
 
 
+
 /**
- * Log
+ * Logger
  */
 let logDefault = console.log;
 console.debug = function() {
-    let args = Array.from(arguments),
-        label = args.shift();
+    let self = this,
+        packageName = packageJson.name.toUpperCase(),
+        messageList = Array.from(arguments),
+        messageLabel = messageList.shift(),
+        messageListFormatted = util.format.apply(null, messageList);
 
-    ipcRenderer.send('log', arguments);
-    logDefault.apply(this, ['%c%s%c%s%c %c%s', 'font-weight: bold; background: #4AB367; color: white;', '[' + packageJson.name.toUpperCase() + ']', 'background: #4AB367; color: white; padding: 0 2px 0 0', '[' + label + ']', '', 'font-weight: bold', util.format.apply(null, args)]);
+    // Add brackets
+    packageName = '[' + packageName + ']';
+    messageLabel = '[' + messageLabel + ']';
+
+    // Show in console
+    logDefault.apply(self, [
+        '%c%s%c%s%c %c%s', 'font-weight: bold; background: #4AB367; color: white;',
+        packageName,
+        'background: #4AB367; color: white; padding: 0 2px 0 0',
+        messageLabel,
+        '',
+        'font-weight: bold',
+        messageListFormatted
+    ]);
+
+    // Send to main process
+    ipcRenderer.send('log', [
+        messageLabel,
+        messageListFormatted
+    ]);
 };
+
 
 
 /**
@@ -153,10 +192,12 @@ let getFormattedDate = function(unixTime) {
 };
 
 
+
 /**
  * Notification constructor reference
  */
 let NotificationDefault = Notification;
+
 
 
 /**
@@ -206,6 +247,7 @@ let getIconForPushbulletPush = function(push) {
 
     return imageUrl;
 };
+
 
 
 /**
@@ -263,7 +305,7 @@ Notification = function(pushTitle, pushObject) {
     electronSettings.get('user.enableSound')
         .then(enableSound => {
             if (enableSound === true) {
-                electronSettings.get('app.notificationFile')
+                electronSettings.get('internal.notificationFile')
                     .then(notificationFile => {
                         playSoundFile(notificationFile, function(err, file) {
                             if (err) {
@@ -298,6 +340,7 @@ Notification.permission = NotificationDefault.permission;
 Notification.requestPermission = NotificationDefault.requestPermission.bind(Notification);
 
 
+
 /**
  * Show Notification
  */
@@ -308,12 +351,17 @@ window.showNotification = function(push) {
 };
 
 
+
+
 /**
  * Enqueue multiple pushes (throttled)
+ * @param {Array} pushes - Array of Pushbullet pushes
+ * @param {Function} cb - Callback
+ * @return {*}
  */
-window.enqueuePushesForNotification = function(pushes, after, callback) {
+window.enqueuePushes = function(pushes, cb) {
 
-    let cb = callback || function() {};
+    let callback = cb || function() {};
 
     let self = this;
 
@@ -321,62 +369,79 @@ window.enqueuePushesForNotification = function(pushes, after, callback) {
         return;
     }
 
-    let pushesList = pushes,
-        notifyAfter = after || 0;
+    electronSettings.get('internal.lastNotification')
+        .then(lastNotification => {
 
-    // Remove pushes older than 'app.lastNotification' from array
-    let recentPushes = pushesList.filter(function(element) {
-        return (element.modified || element.created) > notifyAfter;
-    });
+            let pushesList = pushes,
+                notifyAfter = lastNotification || 0;
 
-    recentPushes.forEach(function(push, index) {
-        let notificationTimeout = setTimeout(function() {
+            // Remove pushes older than 'internal.lastNotification' from array
+            let recentPushes = pushesList.filter(function(element) {
+                return (element.modified || element.created) > notifyAfter;
+            });
 
-            // Show local notification
-            window.showNotification(push, notifyAfter);
+            recentPushes.forEach(function(push, index) {
+                let notificationTimeout = setTimeout(function() {
 
-            // Update 'app.lastNotification' with timestamp from most recent push
-            if (push.modified > notifyAfter) {
-                // Sync Settings
-                electronSettings.set('app.lastNotification', push.modified)
-                    .then(() => {});
-                // DEBUG
-                //log('[appSettings', '[app.lastNotification', push.modified);
-            }
+                    // Show local notification
+                    window.showNotification(push, notifyAfter);
 
-            // Debug
-            //log('[title', push.title || push.body);
-            //log('[modified', push.modified, '[notifyAfter', notifyAfter);
-            //log('[modified <= notifyAfter', (push.modified <= notifyAfter));
+                    // Update 'internal.lastNotification' with timestamp from most recent push
+                    if (push.modified > notifyAfter) {
+                        // Sync Settings
+                        electronSettings.set('internal.lastNotification', push.modified)
+                            .then(() => {});
+                    }
 
-            // Callback
-            if (recentPushes.length === (index + 1)) {
-                clearTimeout(notificationTimeout);
-                return cb(recentPushes.length);
-            }
-        }, parseInt((1000 / maxNotificationsPerSecond)) * index, self);
-    }, self);
-
-    return cb(recentPushes.length);
+                    // Callback
+                    if (recentPushes.length === (index + 1)) {
+                        clearTimeout(notificationTimeout);
+                        return callback(recentPushes.length);
+                    }
+                }, parseInt((1000 / maxNotificationsPerSecond)) * index, self);
+            }, self);
+        });
 };
+
 
 
 /**
  * Get all new pushes and show them (if any)
  */
-window.enqueueNewPushes = function(callback) {
+window.enqueueRecentPushes = function(cb) {
 
-    let cb = callback || function() {};
+    let callback = cb || function() {};
 
     let pushesList = window.getPushes(maxRecentNotifications);
 
-    electronSettings.get('app.lastNotification')
-        .then(lastNotification => {
-            window.enqueuePushesForNotification(pushesList, lastNotification, function(length) {
-                return cb(length);
-            });
-        });
+    window.enqueuePushes(pushesList, function(length) {
+        callback(length);
+        // DEBUG
+        console.debug('window.enqueueNewPushes', 'callback');
+    });
 };
+
+
+
+
+/**
+ * Register single push for notification
+ * @param {Object} pushObject - Pushbullet Push Object
+ * @param {Function=} cb - Callback
+ */
+window.enqueueSinglePush = function(pushObject, cb) {
+
+    let callback = cb || function() {},
+        pushesList = [pushObject];
+
+    window.enqueuePushes(pushesList, function(length) {
+        callback(length);
+
+        // DEBUG
+        console.debug('window.enqueueNewPushes', 'callback');
+    });
+};
+
 
 
 /**
@@ -397,14 +462,20 @@ window.onload = function() {
             window.createPushProxy();
 
             // Show recent pushes manually on load
-            window.enqueueNewPushes(function(result) {
-                console.debug('Callback fired', 'window.enqueueNewPushes', 'result', result);
-            });
+            electronSettings.get('user.showRecentPushesOnStartup')
+                .then(showRecentPushesOnStartup => {
+                    if (showRecentPushesOnStartup) {
+                        window.enqueueRecentPushes(function(result) {
+                            console.debug('window.enqueueNewPushes', 'callback', 'result', result);
+                        });
+                    }
+                });
 
             return clearInterval(injectionInterval);
         }
     }, 500, this);
 };
+
 
 
 /**
@@ -417,16 +488,18 @@ window.addTitlebarMargin = function() {
 };
 
 
+
 /**
  * Remove setup menu item
  */
 window.optimizeMenu = function() {
     window.pb.api.account.preferences.setup_done = true;
     window.pb.sidebar.update();
-    window.onecup.goto('/#people');
+    window.onecup['goto']('/#people');
 
     console.debug('window.optimizeMenu');
 };
+
 
 
 /**
@@ -437,6 +510,7 @@ window.enableDebug = function(enable) {
 
     console.debug('enableDebug', window.pb.DEBUG);
 };
+
 
 
 /**
@@ -458,6 +532,7 @@ window.createWebsocketProxy = function() {
 };
 
 
+
 /**
  * Proxy pb.ws
  */
@@ -469,8 +544,10 @@ window.createErrorProxy = function() {
         }
     });
 
+    // DEBUG
     console.debug('Proxy created', 'window.pb.error');
 };
+
 
 
 /**
@@ -479,32 +556,24 @@ window.createErrorProxy = function() {
 window.createPushProxy = function() {
     window.pb.api.pushes.objs = new Proxy(window.pb.api.pushes.objs, {
         set: function(target, name, value) {
-            let isNew = !Boolean(target[name]);
+            // Check if push with unique id already as property exists
+            let pushIsNew = !Boolean(target[name]);
 
             target[name] = value;
 
-            if (isNew) {
-                // DEBUG
-                // console.debug('window.pb.api.pushes.objs', 'isNew', isNew);
-                window.enqueueNewPushes(function(result) {
-                    // DEBUG
-                    // console.debug('window.pb.api.pushes.objs', 'enqueueNewPushes', result);
-                });
+            if (pushIsNew) {
+                window.enqueueSinglePush(value);
             }
-
-            // DEBUG
-            // console.debug('window.pb.api.pushes.objs set', 'name', '"' + name + '"', 'value', value.constructor.name);
         }
     });
-
-    //console.debug('Proxy created', 'window.pb.api.pushes.objs');
 };
+
 
 
 /**
  * Get all Pushbullet Pushes sorted by recency (ascending)
  * @param {Number..} limit - Limit result to fixed number
- * @returns {Array} List of Pushes
+ * @returns {Array|undefined} List of Pushes
  */
 window.getPushes = function(limit) {
 
@@ -546,13 +615,14 @@ window.getPushes = function(limit) {
 };
 
 
+
 /**
  * Add native context menus
  */
 window.addEventListener('contextmenu', ev => {
     console.debug('Event', 'window', 'contextmenu');
 
-    if (!ev.target.closest('textarea, input, [contenteditable="true"]')) {
+    if (!ev.target['closest']('textarea, input, [contenteditable="true"]')) {
         return;
     }
 

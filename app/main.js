@@ -40,7 +40,6 @@ const _ = require('lodash'),
  */
 const packageJson = require(path.join(moduleRoot, 'package.json')),
     platform = require(path.join(moduleRoot, 'lib', 'platform')),
-    logger = require(path.join(moduleRoot, 'lib', 'logger')),
     defaultAppMenu = require(path.join(moduleRoot, 'lib', 'application-menu'));
 
 
@@ -72,8 +71,7 @@ let mainWindow,
  * Squirrel Handler
  */
 if (squirrel) {
-    logger.log('Handling Squirrel call', squirrel);
-    return; // jscs:ignore maximumLineLength
+    return;
 }
 
 
@@ -116,6 +114,37 @@ let validateFileType = function(file, targetType, cb) {
 
 
 /**
+ * Log to console and file
+ * @param {*} messageList - Log Message
+ */
+let log = function(messageList) {
+    let localDate = (new Date()),
+        localDateString = localDate.toISOString().replace(/Z|T|\..+/gi, ' ').trim().split(' ').reverse().join(' ');
+
+    for (let message in messageList) {
+        if (messageList[message] !== null && typeof messageList[message] === 'object') {
+            messageList[message] = '\r\n' + util.inspect(messageList[message], {
+                    colors: true, showProxy: true, showHidden: true, depth: null
+                });
+        }
+    }
+
+    let logEntry = '[' + localDateString + ']' + ' ' + messageList.join(' ');
+
+    electronSettings.get('internal.logFile')
+        .then(value => {
+            fs.appendFile(value, (logEntry + '\r\n'), function(err) {
+                if (err) {
+                    return console.error('error', err);
+                }
+            });
+        });
+
+    console.log(logEntry);
+};
+
+
+/**
  * IPC: New Notification
  * @listens ipcMain#notification-click
  */
@@ -131,7 +160,7 @@ ipcMain.on('notification-received', () => {
  * @listens ipcMain#notification-click
  */
 ipcMain.on('notification-click', (event, options) => {
-    logger.log('notification-click', 'options', options);
+    log(['notification-click', 'options', options]);
 
     let url = options.url;
     if (url) {
@@ -164,18 +193,11 @@ ipcMain.on('error-external', () => {
 
 
 /**
- * Log
+ * IPC: Log
+ * @listens ipcMain:log
  */
 ipcMain.on('log', (event, message) => {
-    let jsonDate = (new Date()).toJSON(),
-        logEntry = '[' + jsonDate + ']' + ' ' + util.format.apply(null, message) + '\n';
-
-    electronSettings.get('app.logFile')
-        .then(value => {
-            fs.appendFile(value, logEntry, (err) => {
-                if (err) { return logger.log('error', err); }
-            });
-        });
+    return log(message); // jshint ignore:line
 });
 
 
@@ -200,15 +222,17 @@ let updateDock = function(enable) {
 };
 
 
+
 /**
  * Register Configuration
  * @param {Electron.Menu} currentMenu - Electron Menu to add settings to
- * @param {electronSettings} electronSettingsInstance - 'electron-settings' instance
+ * @param {electronSettings:electronSettings} electronSettingsInstance - 'electron-settings' instance
  * @param {String..} relativeKeypath - Nested Keypath to registrable settings, e.g. 'options.app'
  * @param {Object..} eventObject - Optionally attach behaviour to options
  */
 let registerOptionsWithMenu = function(currentMenu, electronSettingsInstance, relativeKeypath, eventObject) {
-    let settings = keypath(relativeKeypath, electronSettingsInstance.getSync()) || electronSettingsInstance.getSync();
+    let settings = keypath(relativeKeypath, electronSettingsInstance.getSync()) || electronSettingsInstance.getSync(),
+        settingsCount = Object.keys(settings).length;
 
     let menu = new Menu();
 
@@ -217,32 +241,61 @@ let registerOptionsWithMenu = function(currentMenu, electronSettingsInstance, re
         menu.append(new MenuItem(item));
     }
 
-    // Add Seperator
+    // Add separator line
     menu.append(new MenuItem({ type: 'separator' }));
 
-    // Add on/off to Menu
+    // Option Click Handler
+    let settingClickHandler = function(menuItem) {
+        let absoluteKeypath = menuItem.sublabel,
+            isChecked = menuItem.checked;
+
+        electronSettingsInstance.setSync(absoluteKeypath, isChecked);
+
+        let handler = keypath(absoluteKeypath, eventObject);
+
+        if (_.isFunction(handler)) {
+            handler(isChecked);
+        }
+    };
+
+    // Loop all Settings
+    let iteration = 0;
     for (let option in settings) {
-        let absoluteKeypath = relativeKeypath + '.' + option;
 
-        let newItem = new MenuItem({
-            type: 'checkbox',
-            id: option,
-            label: _.startCase(option),
-            checked: electronSettingsInstance.getSync(absoluteKeypath),
-            click(item) {
-                electronSettingsInstance.setSync(absoluteKeypath, item.checked);
+        // Only support Booleans (checkboxes) for now
+        if (_.isBoolean(settings[option]) === true) {
 
-                let handler = keypath(absoluteKeypath, eventObject);
+            let absoluteKeypath = relativeKeypath + '.' + option;
 
-                if (_.isFunction(handler)) { handler(item.checked); }
+            let newItem = new MenuItem({
+                type: 'checkbox',
+                id: option,
+                sublabel: absoluteKeypath,
+                label: _.startCase(option),
+                checked: electronSettingsInstance.getSync(absoluteKeypath),
+                click: settingClickHandler
+            });
+
+            menu.append(newItem);
+
+            // Check if last iteration
+            if (iteration !== settingsCount) {
+                // Add separator line
+                menu.append(new MenuItem({ type: 'separator' }));
             }
-        });
 
-        menu.append(newItem);
+            // Increment iteration
+            iteration++;
+
+            // DEBUG
+            log(['registerOptionsWithMenu', 'option', option]);
+            log(['registerOptionsWithMenu', '_.isBoolean(settings[option]', _.isBoolean(settings[option])]);
+        }
     }
 
     appTray.setContextMenu(menu);
 };
+
 
 
 /** @listens app#before-quit */
@@ -253,7 +306,7 @@ app.on('before-quit', () => {
 
 /** @listens app#quit */
 app.on('quit', () => {
-    logger.log('Updated settings', electronSettings.getSettingsFilePath(), electronSettings.getSync());
+    log(['Settings file', electronSettings.getSettingsFilePath(), electronSettings.getSync()]);
 });
 
 
@@ -273,7 +326,7 @@ app.on('window-all-closed', () => {
 
 /**
  * Settings
- * @property {Boolean} user.showApp - Show App
+ * @property {Boolean} user.showWindow - Show App Window
  * @property {Boolean} user.enableSound - Play Notification Sound
  * @property {String} app.currentVersion - Application Version
  * @property {Number} app.lastNotification - Timestamp of last delivered Pushbullet Push
@@ -283,10 +336,11 @@ app.on('window-all-closed', () => {
  */
 const DEFAULT_SETTINGS = {
     user: {
-        showApp: true,
-        enableSound: true
+        showWindow: true,
+        enableSound: true,
+        showRecentPushesOnStartup: true
     },
-    app: {
+    internal: {
         name: appName,
         currentVersion: appVersion,
         lastNotification: Math.floor(Date.now() / 1000) - 86400,
@@ -307,23 +361,23 @@ const DEFAULT_SETTINGS = {
  */
 const DEFAULT_EVENTS = {
     user: {
-        showApp: function(show) {
+        showWindow: function(show) {
             return updateDock(show);
         }
     },
-    app: {
+    internal: {
         notificationFile: function(items) {
             if (items) {
                 validateFileType(items, 'audio', function(err, file) {
-                    if (err) { return logger.error(err); }
-                    electronSettings.set('app.notificationFile', file).then(() => {});
+                    if (err) { return log([err]); }
+                    electronSettings.set('internal.notificationFile', file).then(() => {});
 
-                    electronSettings.get('app.windowPosition')
+                    electronSettings.get('internal.windowPosition')
                         .then(value => {
                             mainWindow.setBounds(value);
                         });
 
-                    logger.log('Updated Setting', 'notificationFile', file);
+                    log(['Updated Setting', 'notificationFile', file]);
                 });
             }
         }
@@ -344,7 +398,7 @@ app.on('ready', () => {
 
     // Init Log Directory
     mkdirp(appLogDirectory, (err) => {
-        if (err) { return logger.error('appLogDirectory', err); }
+        return log(['appLogDirectory', err]);
     });
 
     // Add globals to Electrons 'global'
@@ -410,7 +464,7 @@ app.on('ready', () => {
             return;
         }
 
-        electronSettings.get('app.windowPosition')
+        electronSettings.get('internal.windowPosition')
             .then(value => {
                 mainWindow.setBounds(value);
             });
@@ -418,7 +472,7 @@ app.on('ready', () => {
 
     /** @listens mainWindow:close */
     mainWindow.on('close', ev => {
-        electronSettings.set('app.windowPosition', mainWindow.getBounds())
+        electronSettings.set('internal.windowPosition', mainWindow.getBounds())
             .then(() => {});
 
         if (mainWindow.forceClose) {
@@ -459,19 +513,20 @@ app.on('ready', () => {
                 title: 'Pick Soundfile (aiff, m4a, mp3, mp4, m4a)', properties: ['openFile', 'showHiddenFiles'],
                 defaultPath: appSoundDirectory,
                 filters: [{ name: 'Sound', extensions: ['aiff', 'm4a', 'mp3', 'mp4', 'wav'] }]
-            }, DEFAULT_EVENTS.app.notificationFile);
+            }, DEFAULT_EVENTS.internal.notificationFile);
         }
     }));
 
     Menu.setApplicationMenu(appMenu);
 
-    // Apply loaded settings
-    electronSettings.set('app.currentVersion', appVersion)
+    // Commit Settings
+    electronSettings.set('internal.currentVersion', appVersion)
         .then(() => {
-            logger.log('app.currentVersion', appVersion);
+            log(['internal.currentVersion', appVersion]);
         });
 
-    electronSettings.get('user.showApp')
+    // Load Settings
+    electronSettings.get('user.showWindow')
         .then(value => {
             updateDock(value);
         });
