@@ -6,7 +6,7 @@
  * @global
  */
 const path = require('path'),
-    fs = require('fs'),
+    fs = require('fs.extra'),
     util = require('util');
 
 /**
@@ -31,7 +31,6 @@ const _ = require('lodash'),
     squirrel = require('electron-squirrel-startup'),
     keypath = require('keypath'),
     mime = require('mime'),
-    mkdirp = require('mkdirp'),
     AppDirectory = require('appdirectory');
 
 /**
@@ -39,7 +38,7 @@ const _ = require('lodash'),
  * @global
  */
 const packageJson = require(path.join(moduleRoot, 'package.json')),
-    platform = require(path.join(moduleRoot, 'lib', 'platform')),
+    platformHelper = require(path.join(moduleRoot, 'lib', 'platform-helper')),
     defaultAppMenu = require(path.join(moduleRoot, 'lib', 'application-menu'));
 
 
@@ -50,9 +49,9 @@ const packageJson = require(path.join(moduleRoot, 'package.json')),
 const appUrl = 'file://' + moduleRoot + '/app/index.html',
     appName = packageJson.productName || packageJson.name,
     appVersion = packageJson.version,
-    appIcon = path.join(moduleRoot, 'icons', platform.type, 'app-icon' + platform.icon(platform.type)),
-    appTrayIconDefault = path.join(moduleRoot, 'icons', platform.type, 'icon-tray' + platform.image(platform.type)),
-    appTrayIconActive = path.join(moduleRoot, 'icons', platform.type, 'icon-tray-active' + platform.image(platform.type)),
+    appIcon = path.join(moduleRoot, 'icons', platformHelper.type, 'app-icon' + platformHelper.iconExtension(platformHelper.type)),
+    appTrayIconDefault = path.join(moduleRoot, 'icons', platformHelper.type, 'icon-tray' + platformHelper.imageExtension(platformHelper.type)),
+    appTrayIconActive = path.join(moduleRoot, 'icons', platformHelper.type, 'icon-tray-active' + platformHelper.imageExtension(platformHelper.type)),
     appSoundDirectory = path.join(moduleRoot, 'sounds'),
     appLogDirectory = (new AppDirectory(appName)).userLogs();
 
@@ -62,8 +61,8 @@ const appUrl = 'file://' + moduleRoot + '/app/index.html',
  */
 let mainWindow,
     mainPage,
-    appMenu,
-    appTray,
+    mainTray,
+    appMainMenu,
     appTrayMenu;
 
 
@@ -114,6 +113,14 @@ let validateFileType = function(file, targetType, cb) {
 
 
 /**
+ * Check an objects' type
+ */
+let getObjectType = function(o) {
+    return Object.prototype.toString.call(o).match(/^\[object\s(.*)]$/)[1];
+};
+
+
+/**
  * Log to console and file
  * @param {*} messageList - Log Message
  */
@@ -149,7 +156,7 @@ let log = function(messageList) {
  * @listens ipcMain#notification-click
  */
 ipcMain.on('notification-received', () => {
-    appTray.setImage(appTrayIconActive);
+    mainTray.setImage(appTrayIconActive);
 });
 
 
@@ -186,7 +193,7 @@ ipcMain.on('error-show', (event, message) => {
  * @listens ipcMain#external-error
  */
 ipcMain.on('error-external', () => {
-    if (platform.isOSX) {
+    if (platformHelper.isOSX) {
         app.dock.bounce();
     }
 });
@@ -206,14 +213,14 @@ ipcMain.on('log', (event, message) => {
  * @param {Boolean} enable - True: show dock icon, false: hide icon
  */
 let updateDock = function(enable) {
-    if (platform.isOSX) {
+    if (platformHelper.isOSX) {
         if (enable === true) {
             return app.dock.show();
         }
         app.dock.hide();
     }
 
-    if (!platform.isOSX) {
+    if (!platformHelper.isOSX) {
         if (enable === true) {
             return mainWindow.show();
         }
@@ -224,20 +231,22 @@ let updateDock = function(enable) {
 
 
 /**
- * Register Configuration
- * @param {Electron.Menu} currentMenu - Electron Menu to add settings to
- * @param {electronSettings:electronSettings} electronSettingsInstance - 'electron-settings' instance
- * @param {String..} relativeKeypath - Nested Keypath to registrable settings, e.g. 'options.app'
- * @param {Object..} eventObject - Optionally attach behaviour to options
+ * Automatically add Boolean (checkbox) Settings to Electron Menus
+ * @param {Electron.Menu} targetMenu - Electron Menu to add settings to
+ * @param {Electron.Tray} parentTray - Electron Tray instance hosting the menu
+ * @param {electronSettings#electronSettings} settingsInstance - electron-settings instance
+ * @param {String=} relativeKeypath - Nested Keypath to registrable settings, e.g. 'options.app'
+ * @param {Object=} eventObject - Optionally attach behaviour to options
  */
-let registerOptionsWithMenu = function(currentMenu, electronSettingsInstance, relativeKeypath, eventObject) {
-    let settings = keypath(relativeKeypath, electronSettingsInstance.getSync()) || electronSettingsInstance.getSync(),
+let addSettingsToTrayMenu = function(targetMenu, parentTray, settingsInstance, relativeKeypath, eventObject) {
+    let settings = keypath(relativeKeypath, settingsInstance.getSync()) || settingsInstance.getSync(),
         settingsCount = Object.keys(settings).length;
 
+    // Create new menu instance using existing items
     let menu = new Menu();
 
     // Add existing Menu Items
-    for (let item of currentMenu.items) {
+    for (let item of targetMenu.items) {
         menu.append(new MenuItem(item));
     }
 
@@ -245,18 +254,23 @@ let registerOptionsWithMenu = function(currentMenu, electronSettingsInstance, re
     menu.append(new MenuItem({ type: 'separator' }));
 
     // Option Click Handler
-    let settingClickHandler = function(menuItem) {
-        // Use MenuItem.id for keypath identification
-        let absoluteKeypath = menuItem.id,
-            isChecked = menuItem.checked;
+    let handleItemClick = function(item, settingKeypath) {
 
-        electronSettingsInstance.setSync(absoluteKeypath, isChecked);
+        let itemKeypath = settingKeypath,
+            itemChecked = item.checked;
 
-        let handler = keypath(absoluteKeypath, eventObject);
+        // DEBUG
+        log(['settingClickHandler', 'itemChecked', itemChecked]);
+        log(['settingClickHandler', 'itemKeypath', itemKeypath]);
+
+        settingsInstance.setSync(itemKeypath, itemChecked);
+
+        let handler = keypath(itemKeypath, eventObject);
 
         if (_.isFunction(handler)) {
-            handler(isChecked);
+            handler(itemChecked);
         }
+
     };
 
     // Loop all Settings
@@ -266,14 +280,15 @@ let registerOptionsWithMenu = function(currentMenu, electronSettingsInstance, re
         // Only support Booleans (checkboxes) for now
         if (_.isBoolean(settings[option]) === true) {
 
-            let absoluteKeypath = relativeKeypath + '.' + option;
+            let settingKeypath = relativeKeypath + '.' + option;
 
             let newItem = new MenuItem({
                 type: 'checkbox',
-                id: absoluteKeypath,
                 label: _.startCase(option),
-                checked: electronSettingsInstance.getSync(absoluteKeypath),
-                click: settingClickHandler
+                checked: settingsInstance.getSync(settingKeypath),
+                click (item) {
+                    return handleItemClick(item, settingKeypath);
+                }
             });
 
             menu.append(newItem);
@@ -288,12 +303,14 @@ let registerOptionsWithMenu = function(currentMenu, electronSettingsInstance, re
             iteration++;
 
             // DEBUG
-            log(['registerOptionsWithMenu', 'option', option]);
-            log(['registerOptionsWithMenu', '_.isBoolean(settings[option]', _.isBoolean(settings[option])]);
+            log(['registerOptionsWithMenu', 'absoluteKeypath', settingKeypath]);
+            //log(['registerOptionsWithMenu', '_.isBoolean(settings[option]', _.isBoolean(settings[option])]);
         }
     }
 
-    appTray.setContextMenu(menu);
+    if (getObjectType(parentTray) === 'Tray') {
+        parentTray.setContextMenu(menu);
+    }
 };
 
 
@@ -318,14 +335,14 @@ app.on('activate', () => {
 
 /** @listens app#window-all-closed */
 app.on('window-all-closed', () => {
-    if (platform.type !== 'darwin') {
+    if (platformHelper.type !== 'darwin') {
         app.quit();
     }
 });
 
 
 /**
- * Settings
+ * Default Settings
  * @property {Boolean} user.showWindow - Show App Window
  * @property {Boolean} user.enableSound - Play Notification Sound
  * @property {String} app.currentVersion - Application Version
@@ -334,10 +351,10 @@ app.on('window-all-closed', () => {
  * @property {String} app.notificationFile - Notification sound
  * @property {String} app.logFile - Log file
  */
-const DEFAULT_SETTINGS = {
+const defaultSettings = {
     user: {
-        showWindow: true,
         enableSound: true,
+        showWindow: true,
         showRecentPushesOnStartup: true
     },
     internal: {
@@ -357,9 +374,9 @@ const DEFAULT_SETTINGS = {
 
 
 /**
- * Events attached to settings
+ * Default Settings Click Event Handlers
  */
-const DEFAULT_EVENTS = {
+const defaultSettingsEvents = {
     user: {
         showWindow: function(show) {
             return updateDock(show);
@@ -397,21 +414,21 @@ app.on('ready', () => {
     });
 
     // Settings Defaults
-    electronSettings.defaults(DEFAULT_SETTINGS);
+    electronSettings.defaults(defaultSettings);
     electronSettings.applyDefaultsSync();
 
     // Log Directory
-    mkdirp(appLogDirectory, (err) => {
+    fs.mkdirp(appLogDirectory, (err) => {
         return log(['appLogDirectory', err]);
     });
 
-    // Add globals to Electrons 'global'
+    // Add Settings to Electrons global
     global.electronSettings = electronSettings;
 
-    // Init Tray
-    appTray = new Tray(appTrayIconDefault);
-    appTray.setImage(appTrayIconDefault);
-    appTray.setToolTip(appName);
+    // Tray Menu
+    mainTray = new Tray(appTrayIconDefault);
+    mainTray.setImage(appTrayIconDefault);
+    mainTray.setToolTip(appName);
     appTrayMenu = Menu.buildFromTemplate([
         {
             label: 'Show',
@@ -420,10 +437,32 @@ app.on('ready', () => {
         {
             label: 'Quit',
             click() { app.quit(); }
+        },
+        {
+            type: 'separator'
+        },
+        {
+            type: 'normal',
+            id: 'notificationFile',
+            label: 'Change Sound Effect...',
+            click() {
+                dialog.showOpenDialog({
+                    title: 'Pick Soundfile (aiff, m4a, mp3, mp4, m4a)', properties: ['openFile', 'showHiddenFiles'],
+                    defaultPath: appSoundDirectory,
+                    filters: [{ name: 'Sound', extensions: ['aiff', 'm4a', 'mp3', 'mp4', 'wav'] }]
+                }, defaultSettingsEvents.internal.notificationFile);
+            }
         }
     ]);
 
-    appTray.setContextMenu(appTrayMenu);
+
+    // Register Menu
+    mainTray.setContextMenu(appTrayMenu);
+
+
+    // Add Boolean Settings to Menu
+    addSettingsToTrayMenu(appTrayMenu, mainTray, electronSettings, 'user', defaultSettingsEvents);
+
 
     // Create the browser window.
     mainWindow = new BrowserWindow({
@@ -459,7 +498,7 @@ app.on('ready', () => {
 
     /** @listens mainWindow:focus */
     mainWindow.on('focus', () => {
-        appTray.setImage(appTrayIconDefault);
+        mainTray.setImage(appTrayIconDefault);
     });
 
     /** @listens mainWindow:show */
@@ -501,27 +540,11 @@ app.on('ready', () => {
             mainPage.openDevTools();
         }
 
-        registerOptionsWithMenu(appTrayMenu, electronSettings, 'user', DEFAULT_EVENTS);
     });
 
-    // Create the Application's main menu
-    appMenu = Menu.buildFromTemplate(defaultAppMenu());
-
-    appMenu.items[0].submenu.insert(1, new MenuItem({ type: 'separator' }));
-    appMenu.items[0].submenu.insert(2, new MenuItem({
-        type: 'normal',
-        id: 'notificationFile',
-        label: 'Change Notification Sound...',
-        click() {
-            dialog.showOpenDialog({
-                title: 'Pick Soundfile (aiff, m4a, mp3, mp4, m4a)', properties: ['openFile', 'showHiddenFiles'],
-                defaultPath: appSoundDirectory,
-                filters: [{ name: 'Sound', extensions: ['aiff', 'm4a', 'mp3', 'mp4', 'wav'] }]
-            }, DEFAULT_EVENTS.internal.notificationFile);
-        }
-    }));
-
-    Menu.setApplicationMenu(appMenu);
+    // App Menu
+    appMainMenu = Menu.buildFromTemplate(defaultAppMenu());
+    Menu.setApplicationMenu(appMainMenu);
 
     // Commit Settings
     electronSettings.set('internal.currentVersion', appVersion)
