@@ -246,7 +246,8 @@ let registerOptionsWithMenu = function(currentMenu, electronSettingsInstance, re
 
     // Option Click Handler
     let settingClickHandler = function(menuItem) {
-        let absoluteKeypath = menuItem.sublabel,
+        // Use MenuItem.id for keypath identification
+        let absoluteKeypath = menuItem.id,
             isChecked = menuItem.checked;
 
         electronSettingsInstance.setSync(absoluteKeypath, isChecked);
@@ -269,8 +270,7 @@ let registerOptionsWithMenu = function(currentMenu, electronSettingsInstance, re
 
             let newItem = new MenuItem({
                 type: 'checkbox',
-                id: option,
-                sublabel: absoluteKeypath,
+                id: absoluteKeypath,
                 label: _.startCase(option),
                 checked: electronSettingsInstance.getSync(absoluteKeypath),
                 click: settingClickHandler
@@ -389,14 +389,18 @@ const DEFAULT_EVENTS = {
  *  Main
  */
 app.on('ready', () => {
-    // Load Settings
-    electronSettings.defaults(DEFAULT_SETTINGS);
+
+    // Settings Configuration
     electronSettings.configure({
         prettify: true,
         atomicSaving: true
     });
 
-    // Init Log Directory
+    // Settings Defaults
+    electronSettings.defaults(DEFAULT_SETTINGS);
+    electronSettings.applyDefaultsSync();
+
+    // Log Directory
     mkdirp(appLogDirectory, (err) => {
         return log(['appLogDirectory', err]);
     });

@@ -6,9 +6,9 @@ npm run build darwin
 
 # Install
 echo "Installing.."
-rm -rf "/Applications/Pushbullet for Desktop.app"
-mv "./build/staging/Pushbullet for Desktop-darwin-x64/Pushbullet for Desktop.app" "/Applications/"
+rm -rf "/Applications/PB for Desktop.app"
+mv "./build/staging/PB for Desktop-darwin-x64/PB for Desktop.app" "/Applications/"
 
 # Start
 echo "Starting.."
-DEBUG=1 open "/Applications/Pushbullet for Desktop.app"
+DEBUG=1 open "/Applications/PB for Desktop.app"

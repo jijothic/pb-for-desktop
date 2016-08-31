@@ -2,4 +2,4 @@
 
 # Start
 echo "Starting.."
-DEBUG=1 open "/Applications/Pushbullet for Desktop.app"
+DEBUG=1 open "/Applications/PB for Desktop.app"

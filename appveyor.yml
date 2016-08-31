@@ -32,7 +32,7 @@ install:
 test_script:
   - node --version
   - npm --version
-  
+
 build_script:
   - npm run-script build win32
 
@@ -42,6 +42,13 @@ build:
 
 nuget:
   project_feed: true
+
+notifications:
+  - provider: Webhook
+    url: https://webhooks.gitter.im/e/65966d679f4ebeae4b3b   # Gitter
+    on_build_success: false
+    on_build_failure: true
+    on_build_status_changed: true
 
 deploy:
   provider: GitHub
@@ -54,4 +61,3 @@ deploy:
   force_update: true
   on:
     branch: release
-    

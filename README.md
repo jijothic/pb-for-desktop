@@ -1,10 +1,10 @@
-# Pushbullet for Desktop    
+# PB for Desktop    
 
-[![Build status](https://ci.appveyor.com/api/projects/status/d69sb6iav7tnrldq?svg=true)](https://ci.appveyor.com/project/sidneys/pushbullet-desktop) [![build status](http://img.shields.io/travis/sidneys/pushbullet-desktop.svg?style=flat)](http://travis-ci.org/sidneys/pushbullet-desktop) [![issues](https://img.shields.io/github/issues/sidneys/pushbullet-desktop.svg)](https://github.com/sidneys/pushbullet-desktop/issues) [![Join the chat at https://gitter.im/sidneys/pushbullet-desktop](https://badges.gitter.im/sidneys/pushbullet-desktop.svg)](https://gitter.im/sidneys/pushbullet-desktop?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  
+[![Build status](https://ci.appveyor.com/api/projects/status/d69sb6iav7tnrldq?svg=true)](https://ci.appveyor.com/project/sidneys/pb-for-desktop) [![build status](http://img.shields.io/travis/sidneys/pb-for-desktop.svg?style=flat)](http://travis-ci.org/sidneys/pb-for-desktop) [![issues](https://img.shields.io/github/issues/sidneys/pb-for-desktop.svg)](https://github.com/sidneys/pb-for-desktop/issues) [![Join the chat at https://gitter.im/sidneys/pb-for-desktop](https://badges.gitter.im/sidneys/pb-for-desktop.svg)](https://gitter.im/sidneys/pb-for-desktop?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  
 
 ---
 
-**Pushbullet for Desktop** is a lightweight & unobstrusive cross-platform client for [PushBullet](https://pushbullet.com/).
+**PB for Desktop** is a lightweight & unobstrusive cross-platform client for [PushBullet](https://pushbullet.com/).
 
 Receive native push notifications on OS X, Windows and Linux.
 
@@ -62,7 +62,7 @@ Use tags to add Emojis to notifications.
 
 ## <a name="installation"/>Installation
 
-Download the latest version on the [Releases page](https://github.com/sidneys/pushbullet-desktop/releases).
+Download the latest version on the [Releases page](https://github.com/sidneys/pb-for-desktop/releases).
 
 
 
@@ -71,13 +71,13 @@ Download the latest version on the [Releases page](https://github.com/sidneys/pu
 Install the global node package
 
 ```bash
-npm install --global pushbullet-desktop
+npm install --global pb-for-desktop
 ```
 
 Run it
 
 ```bash
-pushbullet-desktop
+pb-for-desktop
 ```
 
 
@@ -143,7 +143,7 @@ npm run build linux
 
 ### Artifacts
 
-Build artifacts will be placed within **pushbullet-desktop/build/releases**.
+Build artifacts will be placed within **pb-for-desktop/build/releases**.
 
 
 

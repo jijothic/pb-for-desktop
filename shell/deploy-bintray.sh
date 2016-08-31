@@ -94,7 +94,7 @@ CACHE_HOMEPAGE="http://github.io/sidneys/electron-cloud-deploy"
 CACHE_LICENSE="MIT"
 CACHE_FILE_PREFIX="cache-"
 CACHE_FILE_EXTENSION="tar.gz"
-CACHE_PATH_SUBFOLDER="build/tool-cache"
+CACHE_PATH_SUBFOLDER="build/tools-cache"
 APPLICATION_JSON_FILE_NAME="package.json"
 LOGFILE_FILE_NAME="electron-cloud-deploy.log"
 
