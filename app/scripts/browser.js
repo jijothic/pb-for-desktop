@@ -345,9 +345,14 @@ Notification.requestPermission = NotificationDefault.requestPermission.bind(Noti
  * Show Notification
  */
 window.showNotification = function(push) {
-    if (push.active && push.active === true) {
-        return new Notification(null, push);
-    }
+    electronSettings.get('user.snoozeNotifications')
+        .then(snoozeNotifications => {
+            if (!snoozeNotifications) {
+                if (push.active && push.active === true) {
+                    return new Notification(null, push);
+                }
+            }
+        });
 };
 
 

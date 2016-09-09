@@ -41,6 +41,7 @@ install:
 build_script:
   - cmd: npm run-script build win32
 
+test: off
 
 artifacts:
   - path: build\release\*.exe

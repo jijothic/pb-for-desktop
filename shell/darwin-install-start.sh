@@ -1,14 +1,21 @@
 #!/bin/bash
 
+# Project
+PRODUCT_NAME="$(node -p 'require("./package.json").productName')"
+
+# Quit running
+echo "Quitting: ${PRODUCT_NAME}"
+killall "${PRODUCT_NAME}"
+
 # Build
-echo "Building.."
+echo "Building: ${PRODUCT_NAME}"
 npm run build darwin
 
 # Install
-echo "Installing.."
-rm -rf "/Applications/PB for Desktop.app"
-mv "./build/staging/PB for Desktop-darwin-x64/PB for Desktop.app" "/Applications/"
+echo "Installing: ${PRODUCT_NAME}"
+rm -rf "/Applications/"${PRODUCT_NAME}".app"
+mv "./build/staging/${PRODUCT_NAME}-darwin-x64/${PRODUCT_NAME}.app" "/Applications/" || true
 
 # Start
-echo "Starting.."
-DEBUG=1 open "/Applications/PB for Desktop.app"
+echo "Starting: ${PRODUCT_NAME}"
+DEBUG=1 open "/Applications/${PRODUCT_NAME}.app"
