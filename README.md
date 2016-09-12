@@ -1,6 +1,6 @@
 # PB for Desktop    
 
-[![Build status](https://ci.appveyor.com/api/projects/status/d69sb6iav7tnrldq?svg=true)](https://ci.appveyor.com/project/sidneys/pb-for-desktop) [![build status](http://img.shields.io/travis/sidneys/pb-for-desktop.svg?style=flat)](http://travis-ci.org/sidneys/pb-for-desktop) [![issues](https://img.shields.io/github/issues/sidneys/pb-for-desktop.svg)](https://github.com/sidneys/pb-for-desktop/issues) [![Join the chat at https://gitter.im/sidneys/pb-for-desktop](https://badges.gitter.im/sidneys/pb-for-desktop.svg)](https://gitter.im/sidneys/pb-for-desktop?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  
+[![build status](http://img.shields.io/travis/sidneys/pb-for-desktop.svg?style=flat)](http://travis-ci.org/sidneys/pb-for-desktop) [![Build status](https://ci.appveyor.com/api/projects/status/d69sb6iav7tnrldq?svg=true)](https://ci.appveyor.com/project/sidneys/pb-for-desktop) [![issues](https://img.shields.io/github/issues/sidneys/pb-for-desktop.svg)](https://github.com/sidneys/pb-for-desktop/issues) [![Join the chat at https://gitter.im/sidneys/pb-for-desktop](https://badges.gitter.im/sidneys/pb-for-desktop.svg)](https://gitter.im/sidneys/pb-for-desktop?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)   
 
 ---
 

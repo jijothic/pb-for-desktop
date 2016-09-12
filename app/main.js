@@ -1,13 +1,16 @@
 'use strict';
 
 
+
 /**
  * Modules: Node
  * @global
  */
 const path = require('path'),
-    fs = require('fs.extra'),
+    fs = require('fs-extra'),
     util = require('util');
+
+
 
 /**
  * @global
@@ -15,12 +18,17 @@ const path = require('path'),
  */
 const moduleRoot = path.join(__dirname, '..');
 
+
+
+//noinspection NpmUsedModulesInstalled
 /**
  * Modules: Electron
  * @global
  */
 const electron = require('electron');
-const { app, BrowserWindow, Tray, Menu, MenuItem, shell, dialog, ipcMain } = electron;
+const { app, BrowserWindow, Tray, Menu, shell, dialog, ipcMain } = electron;
+
+
 
 /**
  * Modules: Third Party
@@ -34,13 +42,15 @@ const _ = require('lodash'),
     AppDirectory = require('appdirectory'),
     AutoLaunch = require('auto-launch');
 
+
+
 /**
  * Modules: Internal
  * @global
  */
 const packageJson = require(path.join(moduleRoot, 'package.json')),
     platformHelper = require(path.join(moduleRoot, 'lib', 'platform-helper')),
-    defaultAppMenu = require(path.join(moduleRoot, 'lib', 'application-menu')),
+    applicationMenu = require(path.join(moduleRoot, 'app', 'scripts', 'application-menu')),
     logger = require(path.join(moduleRoot, 'lib', 'logger'));
 
 
@@ -54,7 +64,6 @@ const appUrl = 'file://' + moduleRoot + '/app/index.html',
     appVersion = packageJson.version,
     appIcon = path.join(moduleRoot, 'icons', platformHelper.type, 'app-icon' + platformHelper.iconExtension(platformHelper.type)),
     appTrayIconDefault = path.join(moduleRoot, 'icons', platformHelper.type, 'icon-tray' + platformHelper.imageExtension(platformHelper.type)),
-    appTrayIconActive = path.join(moduleRoot, 'icons', platformHelper.type, 'icon-tray-active' + platformHelper.imageExtension(platformHelper.type)),
     appSoundDirectory = path.join(moduleRoot, 'sounds'),
     appLogDirectory = (new AppDirectory(appName)).userLogs(),
     appLauncher = new AutoLaunch({ name: appProductName });
@@ -76,7 +85,9 @@ let mainWindow,
  * Squirrel Handler
  */
 if (squirrel) {
-    return;
+    (function() {
+        return;
+    })();
 }
 
 
@@ -158,26 +169,11 @@ let log = function(messageList) {
 };
 
 
-
 /**
- * IPC: New Notification
- * @listens ipcMain#notification-click
+ * ipcMain
  */
-ipcMain.on('notification-received', () => {
-    appTray.setImage(appTrayIconActive);
-});
-
-
-
-/**
- * IPC: Notification Clicked
- * @param  {ipcMain#IpcMessageEvent} event
- * @param  {*} options
- * @listens ipcMain#notification-click
- */
+/** @listens ipcMain:notification-click */
 ipcMain.on('notification-click', (event, options) => {
-    log(['notification-click', 'options', options]);
-
     let url = options.url;
     if (url) {
         return shell.openExternal(url);
@@ -185,81 +181,74 @@ ipcMain.on('notification-click', (event, options) => {
     mainWindow.show();
 });
 
-
-
-/**
- * IPC: Error
- * @param  {ipcMain#IpcMessageEvent} event
- * @param  {*} message
- * @listens ipcMain#error-show
- */
+/** @listens ipcMain:error-show */
 ipcMain.on('error-show', (event, message) => {
     handleError(message);
 });
 
-
-
-/**
- * IPC: External Error
- * @listens ipcMain#external-error
- */
+/** @listens ipcMain:error-external */
 ipcMain.on('error-external', () => {
-    if (platformHelper.isOSX) {
+    if (platformHelper.isMacOS) {
         app.dock.bounce();
     }
 });
 
+/** @listens ipcMain:window-minimize */
+ipcMain.on('window-minimize', () => {
+    mainWindow.minimize();
+});
 
+/** @listens ipcMain:window-maximize */
+ipcMain.on('window-unmaximize', () => {
+    mainWindow.unmaximize();
+});
 
-/**
- * IPC: Log
- * @listens ipcMain:log
- */
+/** @listens ipcMain:window-fullscreen */
+ipcMain.on('window-maximize', () => {
+    mainWindow.maximize();
+});
+
+/** @listens ipcMain:window-close */
+ipcMain.on('window-close', () => {
+    mainWindow.close();
+});
+
+/** @listens ipcMain:app-quit */
+ipcMain.on('app-quit', () => {
+    app.quit();
+});
+
+/** @listens ipcMain:log */
 ipcMain.on('log', (event, message) => {
     return log(message); // jshint ignore:line
 });
 
 
-
 /**
- * Check an objects' type
- */
-let getObjectType = function(o) {
-    return Object.prototype.toString.call(o).match(/^\[object\s(.*)]$/)[1];
-};
-
-
-
-/**
- * Dock Visibility
+ * Show App in Dock / Taskbar
  * @param {Boolean} show - True: show dock icon, false: hide icon
  */
-let setWindowVisibility = function(show) {
-    // macOS
-    if (platformHelper.isOSX) {
-        if (show === true) {
+let setDisplayInTaskbar = function(show) {
+    if (show) {
+        if (platformHelper.isMacOS) {
             app.dock.show();
         } else {
-            app.dock.hide();
+            mainWindow.setSkipTaskbar(false);
         }
-    }
-
-    // Windows / Linux
-    if (!platformHelper.isOSX) {
-        if (show === true) {
-            mainWindow.show();
+    } else {
+        if (platformHelper.isMacOS) {
+            app.dock.hide();
         } else {
-            mainWindow.hide();
+            mainWindow.setSkipTaskbar(true);
         }
     }
 };
-
 
 
 /**
  * Handle App Settings Click
  * @param {Electron.MenuItem} item - Electron Menu item
- * @param {electronSettings#electronSettings} settingsInstance - electron-settings instance
+ * @param {Object} settingsInstance - electron-settings instance
  * @param {String=} settingKeypath - Nested Keypath to registrable settings, e.g. 'options.app'
  * @param {Object=} eventObject - Optionally attach behaviour to options
  */
@@ -277,76 +266,20 @@ let handleAppSettingsClick = function(item, settingsInstance, settingKeypath, ev
 };
 
 
-
 /**
- * Automatically add Boolean (checkbox) Settings to Electron Menus
- * @param {Electron.Menu} targetMenu - Electron Menu to add settings to
- * @param {Tray} parentTray - Electron Tray instance hosting the menu
- * @param {electronSettings#electronSettings} settingsInstance - electron-settings instance
- * @param {String=} relativeKeypath - Nested Keypath to registrable settings, e.g. 'options.app'
- * @param {Object=} eventObject - Optionally attach behaviour to options
+ * app
  */
-let addAppSettingsToTray = function(targetMenu, parentTray, settingsInstance, relativeKeypath, eventObject) {
-    let settings = keypath(relativeKeypath, settingsInstance.getSync()) || settingsInstance.getSync(),
-        settingsCount = Object.keys(settings).length;
-
-    // Create new menu instance using existing items
-    let menu = new Menu();
-
-    // Add existing Menu Items
-    for (let item of targetMenu.items) {
-        menu.append(new MenuItem(item));
-    }
-
-    // Loop all Settings
-    let iteration = 0;
-    for (let option in settings) {
-
-        // Only support Booleans (checkboxes) for now
-        if (_.isBoolean(settings[option]) === true) {
-
-            let settingKeypath = relativeKeypath + '.' + option;
-
-            let newItem = new MenuItem({
-                type: 'checkbox',
-                label: _.startCase(option),
-                checked: settingsInstance.getSync(settingKeypath),
-                click (item) {
-                    return handleAppSettingsClick(item, settingsInstance, settingKeypath, eventObject);
-                }
-            });
-
-            menu.append(newItem);
-
-            // Check if last iteration
-            if (iteration !== settingsCount) {
-                // Add separator line
-                menu.append(new MenuItem({ type: 'separator' }));
-            }
-
-            // Increment iteration
-            iteration++;
-        }
-    }
-
-    if (getObjectType(parentTray) === 'Tray') {
-        parentTray.setContextMenu(menu);
-    }
-};
-
-
-
 /** @listens app#before-quit */
 app.on('before-quit', () => {
-    mainWindow.forceClose = true;
+    electronSettings.setSync('internal.windowBounds', mainWindow.getBounds());
+    app.isQuitting = true;
 });
-
 
 /** @listens app#quit */
 app.on('quit', () => {
-    log(['Settings file', electronSettings.getSettingsFilePath(), electronSettings.getSync()]);
+    log(['Settings file', electronSettings.getSettingsFilePath()]);
+    logger.debug('electronSettings', electronSettings.getSync());
 });
-
 
 /** @listens app#activate */
 app.on('activate', () => {
@@ -354,30 +287,23 @@ app.on('activate', () => {
 });
 
 
-/** @listens app#window-all-closed */
-app.on('window-all-closed', () => {
-    if (platformHelper.type !== 'darwin') {
-        app.quit();
-    }
-});
-
 
 /**
  * Settings
- * @property {Boolean} user.showWindow - Show App Window
+ * @property {Boolean} user.displayInTaskbar - Show Main Window
  * @property {Boolean} user.enableSound - Play Notification Sound
  * @property {Boolean} user.launchOnStartup - Autostart
  * @property {Boolean} user.showRecentPushesOnLaunch - Show recent pushes
  * @property {String} app.currentVersion - Application Version
  * @property {Number} app.lastNotification - Timestamp of last delivered Pushbullet Push
- * @property {Object} app.windowPosition - Application Window position and size
+ * @property {Object} app.windowBounds - Application Window position and size
  * @property {String} app.notificationFile - Notification sound
  * @property {String} app.logFile - Log file
  */
-const DEFAULT_SETTINGS = {
+const defaultSettings = {
     user: {
-        showWindow: true,
-        launchOnStartup: false,
+        displayInTaskbar: true,
+        launchOnStartup: true,
         showRecentPushesOnStartup: true,
         enableSound: true,
         snoozeNotifications: false
@@ -386,7 +312,7 @@ const DEFAULT_SETTINGS = {
         name: appProductName,
         currentVersion: appVersion,
         lastNotification: Math.floor(Date.now() / 1000) - 86400,
-        windowPosition: {
+        windowBounds: {
             x: 100,
             y: 100,
             width: 400,
@@ -401,10 +327,10 @@ const DEFAULT_SETTINGS = {
 /**
  * Events attached to settings
  */
-const DEFAULT_EVENTS = {
+const settingsEvents = {
     user: {
-        showWindow: function(show) {
-            setWindowVisibility(show);
+        displayInTaskbar: function(display) {
+            setDisplayInTaskbar(display);
         },
         launchOnStartup: function(launch) {
             if (launch) {
@@ -419,9 +345,9 @@ const DEFAULT_EVENTS = {
             if (items) {
                 validateFileType(items, 'audio', function(err, file) {
                     if (err) { return log([err]); }
-                    electronSettings.set('internal.notificationFile', file).then(() => {});
+                    electronSettings.set('internal.notificationFile', file).then(() => { });
 
-                    electronSettings.get('internal.windowPosition')
+                    electronSettings.get('internal.windowBounds')
                         .then(value => {
                             mainWindow.setBounds(value);
                         });
@@ -439,6 +365,9 @@ const DEFAULT_EVENTS = {
  */
 app.on('ready', () => {
 
+    // Add Settings to globals
+    global.electronSettings = electronSettings;
+
     // Settings Configuration
     electronSettings.configure({
         prettify: true,
@@ -446,7 +375,7 @@ app.on('ready', () => {
     });
 
     // Settings Defaults
-    electronSettings.defaults(DEFAULT_SETTINGS);
+    electronSettings.defaults(defaultSettings);
     electronSettings.applyDefaultsSync();
 
     // Log Directory
@@ -454,17 +383,23 @@ app.on('ready', () => {
         return log(['appLogDirectory', err]);
     });
 
-    // Add globals to Electrons 'global'
-    global.electronSettings = electronSettings;
-
     // Init Tray
     appTray = new Tray(appTrayIconDefault);
     appTray.setImage(appTrayIconDefault);
     appTray.setToolTip(appProductName);
     appTrayMenu = Menu.buildFromTemplate([
         {
-            label: 'Show' + ' ' + appProductName,
+            type: 'normal',
+            enabled: false,
+            label: appProductName + ' v' + appVersion
+        },
+        {
+            label: 'Show',
             click() { mainWindow.show(); }
+        },
+        {
+            label: 'Quit',
+            click() { app.quit(); }
         },
         {
             type: 'separator'
@@ -472,22 +407,22 @@ app.on('ready', () => {
         {
             type: 'normal',
             enabled: false,
-            label: 'General:'
+            label: 'General'
         },
         {
             label: 'Display App Window',
             type: 'checkbox',
-            checked: electronSettings.getSync('user.showWindow'),
-            click (item) {
-                return handleAppSettingsClick(item, electronSettings, 'user.showWindow', DEFAULT_EVENTS);
+            checked: electronSettings.getSync('user.displayInTaskbar'),
+            click(item) {
+                return handleAppSettingsClick(item, electronSettings, 'user.displayInTaskbar', settingsEvents);
             }
         },
         {
             label: 'Snooze Notifications',
             type: 'checkbox',
             checked: electronSettings.getSync('user.snoozeNotifications'),
-            click (item) {
-                return handleAppSettingsClick(item, electronSettings, 'user.snoozeNotifications', DEFAULT_EVENTS);
+            click(item) {
+                return handleAppSettingsClick(item, electronSettings, 'user.snoozeNotifications', settingsEvents);
             }
         },
         {
@@ -496,21 +431,21 @@ app.on('ready', () => {
         {
             type: 'normal',
             enabled: false,
-            label: 'Startup:'
+            label: 'Startup'
         },
         {
             label: 'Launch on System Startup',
             type: 'checkbox',
             checked: electronSettings.getSync('user.launchOnStartup'),
-            click (item) {
-                return handleAppSettingsClick(item, electronSettings, 'user.launchOnStartup', DEFAULT_EVENTS);
+            click(item) {
+                return handleAppSettingsClick(item, electronSettings, 'user.launchOnStartup', settingsEvents);
             }
         }, {
             label: 'Show Recent Pushes On Launch',
             type: 'checkbox',
             checked: electronSettings.getSync('user.showRecentPushesOnLaunch'),
-            click (item) {
-                return handleAppSettingsClick(item, electronSettings, 'user.showRecentPushesOnStartup', DEFAULT_EVENTS);
+            click(item) {
+                return handleAppSettingsClick(item, electronSettings, 'user.showRecentPushesOnStartup', settingsEvents);
             }
         },
         {
@@ -519,14 +454,14 @@ app.on('ready', () => {
         {
             type: 'normal',
             enabled: false,
-            label: 'Audio:'
+            label: 'Audio'
         },
         {
             label: 'Enable Sound effects',
             type: 'checkbox',
             checked: electronSettings.getSync('user.enableSound'),
-            click (item) {
-                return handleAppSettingsClick(item, electronSettings, 'user.enableSound', DEFAULT_EVENTS);
+            click(item) {
+                return handleAppSettingsClick(item, electronSettings, 'user.enableSound', settingsEvents);
             }
         },
         {
@@ -535,24 +470,12 @@ app.on('ready', () => {
             label: 'Change Notification Sound...',
             click() {
                 dialog.showOpenDialog({
-                    title: 'Pick Soundfile (aiff, m4a, mp3, mp4, m4a)', properties: ['openFile', 'showHiddenFiles'],
+                    title: 'Change Notification Sound', properties: ['openFile', 'showHiddenFiles'],
                     defaultPath: appSoundDirectory,
                     filters: [{ name: 'Sound', extensions: ['aiff', 'm4a', 'mp3', 'mp4', 'wav'] }]
-                }, DEFAULT_EVENTS.internal.notificationFile);
+                }, settingsEvents.internal.notificationFile);
             }
-        },
-        {
-            type: 'separator'
-        },
-        {
-            type: 'normal',
-            enabled: false,
-            label: 'Version' + ' ' + appVersion
-        },
-        {
-            label: 'Quit' + ' ' + appProductName,
-            click() { app.quit(); }
-        },
+        }
     ]);
 
     appTray.setContextMenu(appTrayMenu);
@@ -561,15 +484,14 @@ app.on('ready', () => {
 
     // Create the browser window.
     mainWindow = new BrowserWindow({
-        backgroundColor: '#4AB367',
+        backgroundColor: '#ECF0F0',
         minHeight: 400,
         minWidth: 400,
-        frame: false,
+        frame: ( platformHelper.isMacOS || platformHelper.isWindows ) ? false : true,
         icon: appIcon,
         title: appProductName,
         show: false,
-        titleBarStyle: 'hidden',
-        alwaysOnTop: true,
+        titleBarStyle: platformHelper.isMacOS ? 'hidden-inset' : 'default',
         fullscreenable: false,
         webPreferences: {
             nodeIntegration: true,
@@ -577,8 +499,7 @@ app.on('ready', () => {
             experimentalFeatures: true,
             allowRunningInsecureContent: true,
             webSecurity: false,
-            webaudio: true,
-            scrollBounce: true
+            webaudio: true
         }
     });
 
@@ -588,84 +509,62 @@ app.on('ready', () => {
     // Web Contents
     mainPage = mainWindow.webContents;
 
-    /** @listens mainWindow#closed */
-    mainWindow.on('closed', () => {
-        mainWindow = null;
-    });
 
-    /** @listens mainWindow:focus */
-    mainWindow.on('focus', () => {
-        appTray.setImage(appTrayIconDefault);
-    });
-
-    /** @listens mainWindow:show */
-    mainWindow.on('show', () => {
-        if (mainWindow.forceClose) {
-            return;
-        }
-
-        electronSettings.get('internal.windowPosition')
-            .then(value => {
-                mainWindow.setBounds(value);
-            });
-    });
-
+    /**
+     * mainWindow
+     */
     /** @listens mainWindow:close */
     mainWindow.on('close', ev => {
-        electronSettings.set('internal.windowPosition', mainWindow.getBounds())
-            .then(() => {});
-
-        if (mainWindow.forceClose) {
-            return;
+        if (!app.isQuitting) {
+            ev.preventDefault();
+            mainWindow.hide();
         }
-        ev.preventDefault();
-        mainWindow.hide();
     });
 
-    /** @listens mainWindow:will-navigate */
+    /**
+     * mainPage
+     */
+    /** @listens mainPage:will-navigate */
     mainPage.on('will-navigate', (event, url) => {
         event.preventDefault();
-        shell.openExternal(url);
+        if (url) {
+            shell.openExternal(url);
+        }
     });
-
-    /** @listens mainWindow:dom-ready */
+    /** @listens mainPage:dom-ready */
     mainPage.on('dom-ready', () => {
         mainWindow.show();
-        //mainPage.openDevTools();
 
         if (process.env['DEBUG']) {
             mainPage.openDevTools();
         }
     });
 
+
     // Create the Application's main menu
-    appMenu = Menu.buildFromTemplate(defaultAppMenu());
+    appMenu = Menu.buildFromTemplate(applicationMenu());
 
     Menu.setApplicationMenu(appMenu);
 
     // Update Settings
     electronSettings.set('internal.currentVersion', appVersion)
-        .then(() => {
-            log(['internal.currentVersion', appVersion]);
-        }).then(function(err) {
-        log(['electronSettings', 'internal.currentVersion', err]);
-    });
+        .then(() => {});
 
     // Apply Settings
-    electronSettings.get('user.showWindow')
-        .then(showWindow => {
-            setWindowVisibility(showWindow);
-        }).then(function(err) {
-        log(['electronSettings', 'user.showWindow', err]);
-    });
+    electronSettings.get('internal.windowBounds')
+        .then(windowBounds => {
+            mainWindow.setBounds(windowBounds);
+        });
+    electronSettings.get('user.displayInTaskbar')
+        .then(displayInTaskbar => {
+            setDisplayInTaskbar(displayInTaskbar);
+        });
     electronSettings.get('user.launchOnStartup')
-        .then(value => {
-            if (value) {
+        .then(launchOnStartup => {
+            if (launchOnStartup) {
                 appLauncher.enable();
             } else {
                 appLauncher.disable();
             }
-        }).then(function(err) {
-        log(['electronSettings', 'user.launchOnStartup', err]);
-    });
+        });
 });

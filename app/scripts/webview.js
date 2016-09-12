@@ -18,15 +18,15 @@ const path = require('path'),
 const moduleRoot = path.join(__dirname, '..');
 
 
-
 /**
  * Modules: Internal
  * @global
  */
-const packageJson = require(path.join(moduleRoot, 'package.json'));
+const packageJson = require(path.join(moduleRoot, 'package.json')),
+    platformHelper = require(path.join(moduleRoot, 'lib', 'platform-helper'));
 
 
-
+//noinspection NpmUsedModulesInstalled
 /**
  * Modules: Electron
  * @global
@@ -35,15 +35,22 @@ const electron = require('electron');
 const { ipcRenderer, remote } = electron;
 
 
+/**
+ * Modules: Third Party
+ * @global
+ */
+const connectClient = require('electron-connect').client,
+    TitlebarWindows = require('electron-titlebar-windows');
+
 
 /**
  * Init
  */
-let webview = document.getElementById('webview'),
+let body = document.getElementsByTagName('body')[0],
+    webview = document.getElementById('webview'),
     overlay = document.getElementById('overlay-spinner'),
     overlayControls = document.getElementById('overlay-controls'),
     overlayControlsHome = document.getElementById('overlay-controls-home');
-
 
 
 /**
@@ -85,9 +92,41 @@ console.debug = function() {
  * Event: did-finish-load
  */
 webview.addEventListener('did-finish-load', () => {
+
     overlay.classList.add('hidden');
 
+    // macOS Title Bar
+    if (platformHelper.isMacOS) {
+        webview.classList.add('padding-titlebar');
+    }
+
+    // Windows Title Bar
+    if (platformHelper.isWindows) {
+        webview.classList.add('padding-titlebar');
+        
+        let titlebar = new TitlebarWindows({
+            darkMode: true,
+            backgroundColor: 'rgba(74, 179, 103, 0.0)',
+            draggable: true
+        }).appendTo(body);
+
+        titlebar.on('minimize', function() {
+            ipcRenderer.send('window-minimize');
+        });
+        titlebar.on('maximize', function() {
+            ipcRenderer.send('window-unmaximize');
+        });
+        titlebar.on('fullscreen', function() {
+            ipcRenderer.send('window-maximize');
+        });
+        titlebar.on('close', function() {
+            ipcRenderer.send('window-close');
+        });
+    }
+
+    // DEBUG
     if (process.env['DEBUG']) {
+        connectClient.create();
         webview.openDevTools();
     }
 });

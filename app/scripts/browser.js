@@ -318,16 +318,12 @@ Notification = function(pushTitle, pushObject) {
             }
         });
 
-
-
     // Register event handlers for main renderer
-    ipcRenderer.send('notification-received');
-
     notification.addEventListener('click', () => {
         ipcRenderer.send('notification-click', options);
     });
 
-    // Debug
+    // DEBUG
     console.debug('Notification', '"' + notification.title + '"');
     console.debug('Notification', 'Created:', getFormattedDate(pushObject.created), '(Modified: ' + getFormattedDate(pushObject.modified) + ')');
 

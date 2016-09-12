@@ -13,8 +13,8 @@ npm run build darwin
 
 # Install
 echo "Installing: ${PRODUCT_NAME}"
-rm -rf "/Applications/"${PRODUCT_NAME}".app"
-mv "./build/staging/${PRODUCT_NAME}-darwin-x64/${PRODUCT_NAME}.app" "/Applications/" || true
+rm -rf "/Applications/${PRODUCT_NAME}.app"
+mv "./build/staging/${PRODUCT_NAME}-darwin-x64/${PRODUCT_NAME}.app" "/Applications/${PRODUCT_NAME}.app"
 
 # Start
 echo "Starting: ${PRODUCT_NAME}"
