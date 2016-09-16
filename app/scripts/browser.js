@@ -33,6 +33,15 @@ const moduleRoot = path.join(__dirname, '..', '..'),
 
 
 /**
+ * Debug
+ * @constant
+ * @global
+ */
+const debugMode = process.env['DEBUG'];
+
+
+
+/**
  * Modules: Internal
  * @global
  */
@@ -453,7 +462,7 @@ window.onload = function() {
     let injectionInterval = setInterval(function() {
         if (window.pb && window.pb.ws.connected) {
 
-            if (process.env['DEBUG']) {
+            if (debugMode) {
                 window.enableDebug(true);
             }
 

@@ -1,158 +1,209 @@
-# PB for Desktop    
+# PB for Desktop [![Chat](https://badges.gitter.im/sidneys/pb-for-desktop.svg)](https://gitter.im/sidneys/pb-for-desktop)[![macOS + Linux Build Status](http://img.shields.io/travis/sidneys/pb-for-desktop.svg?style=flat)](http://travis-ci.org/sidneys/pb-for-desktop)[![Windows Build Status](https://ci.appveyor.com/api/projects/status/d69sb6iav7tnrldq?svg=true)](https://ci.appveyor.com/project/sidneys/pb-for-desktop)
 
-[![build status](http://img.shields.io/travis/sidneys/pb-for-desktop.svg?style=flat)](http://travis-ci.org/sidneys/pb-for-desktop) [![Build status](https://ci.appveyor.com/api/projects/status/d69sb6iav7tnrldq?svg=true)](https://ci.appveyor.com/project/sidneys/pb-for-desktop) [![issues](https://img.shields.io/github/issues/sidneys/pb-for-desktop.svg)](https://github.com/sidneys/pb-for-desktop/issues) [![Join the chat at https://gitter.im/sidneys/pb-for-desktop](https://badges.gitter.im/sidneys/pb-for-desktop.svg)](https://gitter.im/sidneys/pb-for-desktop?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)   
-
----
-
-**PB for Desktop** is a lightweight & unobstrusive cross-platform client for [PushBullet](https://pushbullet.com/).
-
-Receive native push notifications on OS X, Windows and Linux.
+**PB for Desktop** is a lightweight cross-platform desktop client for [PushBullet](https://pushbullet.com/).
+Receive native push notifications on macOS, Windows and Linux.
 
 *Not affiliated with PushBullet Inc..*
 
+------
+![Screenshot: Pushbullet for Desktop (macOS)](screenshot-macos.png)
 
-## Contents
+![Screenshot: Pushbullet for Desktop (Windows)](screenshot-windows.png) 
 
-1. [Features](#features)
-2. [Installation](#installation)
-3. [CLI](#cli)
-4. [Developers](#developers)
-5. [How to Build](#how-to-build)
-6. [Author](#author)
-7. [License](#license)
+------
+
+## Features
 
 
-## <a name="features"/>Features
-
-**Native Notifications**
+>
+> **Native Notifications**
+>
 
 Uses the macOS Notification Center and the Windows 10 Action Center.
 
-**Unobstrusive**
+>
+> **Unobstrusive**
+>
 
 Small resource footprint - runs as a macOS Menu Bar app or a Windows System Tray app.
 
-**Simple Setup**
+>
+> **Simple Setup**
+>
 
 No wrestling with API-Keys or other technical knowledge required.
 Login to Pushbullet using Google or Facebook.
 
-**Channel Images**
+>
+> **Channel Images**
+>
 
 Channel-specific  (e.g. [IFTTT](https://ifttt.com/), [Zapier](https://zapier.com/), [Chat](http://lifehacker.com/huge-pushbullet-update-adds-instant-messaging-chat-hea-1714870644)) icon images for most notifications.
 
-**Image Thumbnails**
+>
+> **Image Thumbnails**
+>
 
 Preview thumbnails for pushes containing images.
 
-**Custom Sound Effects**
+>
+> **Custom Sound Effects**
+>
 
 Use the default Pushbullet sound or one of your choice.
 
-**Notification Emoji** 👾
+>
+> **Notification Emoji** 👾
+>
 
-Use tags to add Emojis to notifications.
+Use tags to add emoji to notifications (example: add  `{video}` to show a 📺 emoji with every notification).
 
-*Examples*
+------
 
-- Add **{video}** to YouTube pushes to show a 📺 in front of notifications
-- Add **{social}** to reddit pushes with to show a 🍻 with notifications
+## Contents
 
+- [Installation](#installation)
+  - [Standard Installation](#standard-installation)
+  - [Commandline](#commandline)
+- [Developers](#developers)
+  + [Sourcecode](#sourcecode)
+  + [Dependencies](#dependencies)
+  + [Run](#run)
+  + [Run (Live Reload)](#run-live-reload)
+- [How to Build](#how-to-build)
+  + [Build Prerequisites](#build-prerequisites)
+  + [Running a Build](#running-a-build)
+- [Continuous Integration](#continuous-integration)
+- [Roadmap](#roadmap)
+- [Discussion](#discussion)
+- [Author](#author)
+- [License](#license)
 
+## <a name="installation"/></a>Installation
 
-## <a name="installation"/>Installation
+### <a name="standard-installation"/></a>Standard Installation
 
 Download the latest version on the [Releases page](https://github.com/sidneys/pb-for-desktop/releases).
 
+### <a name="commandline"/></a>Commandline
 
-
-## <a name="cli"/>CLI
-
-Install the global node package
+Install the package globally, then run it:
 
 ```bash
 npm install --global pb-for-desktop
-```
-
-Run it
-
-```bash
 pb-for-desktop
 ```
 
 
 
-## <a name="developers"/>Developers
+## <a name="developers"/></a>Developers
 
-### Environment
+### <a name="sourcecode"/></a>Sourcecode
 
-After cloning, install the required packages:
+[Clone](github-mac://openRepo/https://github.com/sidneys/pb-for-desktop) or [download](https://github.com/sidneys/pb-for-desktop/archive/master.zip) the sourcecode repository:
+
+```bash
+git clone https://github.com/sidneys/pb-for-desktop.git
+```
+
+### <a name="dependencies"/></a>Dependencies
+
+To install the required dependencies:
 
 ```bash
 npm install
 ```
 
-Fire up a local Electron instance:
+### <a name="run"/></a>Run
+
+To invoke `electron-prebuilt` on top of the source files:
 
 ```bash
-./node_modules/.bin/electron ./app/main.js
+npm run start
+```
+
+### <a name="run-live-reload"/></a>Run (Live Reload)
+
+To invoke `electron-prebuilt` on top of the source files with live reload support:
+
+```bash
+npm run serve
 ```
 
 
 
-## <a name="how-to-build"/>How to Build
+## <a name="how-to-build"/></a>How to Build
 
-### Prerequisites
+### <a name="build-prerequisites"/></a>Build Prerequisites
 
-All platforms can only be built on macOS. Building the Windows binaries on macOS or Linux moreover requires [wine](https://winehq.org) and [mono](https://nsis.sourceforge.net/Docs/Chapter3.htm), whereas building for Linux requires [fakeroot](https://wiki.debian.org/FakeRoot) and [dpkg](https://wiki.ubuntuusers.de/dpkg/).
+Building for Windows (on macOS & Linux) requires  [`wine`](https://winehq.org) and [`mono`](https://nsis.sourceforge.net/Docs/Chapter3.htm), whereas building for Linux (on macOS & Windows) requires  [`fakeroot`](https://wiki.debian.org/FakeRoot) and [`dpkg`](https://wiki.ubuntuusers.de/dpkg/). All 3 platforms can only be built on macOS. 
 
-To install these prerequisites on macOS (using [Homebrew](https://brew.sh)), run:
-
-```bash
-brew install --verbose wine mono
-brew install --verbose fakeroot dpkg
-```
-
-### To build all platforms
-
-To build binaries for all platforms (which can be built under the current platform), run:
+To install these requirements on macOS (via [Homebrew](https://brew.sh)):
 
 ```bash
-npm run build <darwin|linux|win32>
+brew install wine mono
+brew install fakeroot dpkg
 ```
 
-### To build a specific platform
-
-#### macOS
+To install these requirements on Linux (via [APT](https://en.wikipedia.org/wiki/Advanced_Packaging_Tool)):
 
 ```bash
-npm run build darwin
+sudo apt-get install wine mono
+sudo apt-get install fakeroot dpkg
 ```
 
-#### Windows
+The build system automatically creates binaries for all available cpu architectures.
+
+### <a name="running-a-build"/></a>Running a Build
+
+To build all available platforms:
 
 ```bash
-npm run build win32
+npm run build		
 ```
 
-#### Linux
+To build platforms selectively, specify their name (`darwin` for macOS,  `win32` for Windows, `linux` for Linux):
 
 ```bash
-npm run build linux
+npm run build darwin		# builds macOS
 ```
 
-### Artifacts
+```bash
+npm run build linux win32	# builds Linux, Windows
+```
 
-Build artifacts will be placed within **pb-for-desktop/build/releases**.
+## <a name="continuous-integration"/></a>Continuous Integration
+
+The build process is fully automated, featuring [continuous integration](https://en.wikipedia.org/wiki/Continuous_integration) support provided by target-platform-specific backends:
+- [Travis CI](http://travis-ci.org/sidneys/pb-for-desktop) for macOS and Linux builds
+- [AppVeyor](https://ci.appveyor.com/project/sidneys/pushbullet-desktop) for Windows builds
+
+A build and deployment cycle is comprised of several steps:
+
+1. a new tag on the [release](https://github.com/sidneys/pb-for-desktop/commits/release) branch initiates the cycle (e.g. [v.1.0.0](https://github.com/sidneys/pb-for-desktop/releases/tag/v2.0.0))
+2. after a successful build, resulting artifacts are deployed back to GitHub (using the existing tag)
+3. the resulting tag (combined with all artifacts) constitutes a new [Github Release](https://github.com/sidneys/pb-for-desktop/releases)
+4. the GitHub Release can then be manually published by project contributors
+
+## <a name="roadmap"/></a>Roadmap
+
+- [ ] In-App-Updates (via Squirrel / Heroku /  GitHub)
+- [ ] Signed binaries for macOS and Windows 10
+- [ ] E2E tests via [Spectron](https://github.com/electron/spectron)
 
 
+## <a name="discussion"/></a>Discussion
 
-## <a name="author"/>Author
+- [sidneys/pb-for-desktop](https://gitter.im/sidneys/pb-for-desktop) on Gitter
+
+
+- [/r/PushBullet](https://www.reddit.com/r/PushBullet/comments/50ewjd/i_just_released_pb_for_desktop_an_opensource/) on Reddit
+
+
+## <a name="author"/></a>Author
 
 [sidneys](http://sidneys.github.io)
 
-
-
-## <a name="license"/>License
+## <a name="license"/></a>License
 
 MIT

@@ -54,6 +54,16 @@ const packageJson = require(path.join(moduleRoot, 'package.json')),
     logger = require(path.join(moduleRoot, 'lib', 'logger'));
 
 
+
+/**
+ * Debug
+ * @constant
+ * @global
+ */
+const debugMode = process.env['DEBUG'];
+
+
+
 /** App Properties
  * @global
  * @constant
@@ -66,8 +76,7 @@ const appUrl = 'file://' + moduleRoot + '/app/index.html',
     appTrayIconDefault = path.join(moduleRoot, 'icons', platformHelper.type, 'icon-tray' + platformHelper.imageExtension(platformHelper.type)),
     appSoundDirectory = path.join(moduleRoot, 'sounds'),
     appLogDirectory = (new AppDirectory(appName)).userLogs(),
-    appLauncher = new AutoLaunch({ name: appProductName });
-
+    appLauncher =  debugMode ? new AutoLaunch({ name: appName }) : void 0;
 
 
 /**
@@ -303,7 +312,7 @@ app.on('activate', () => {
 const defaultSettings = {
     user: {
         displayInTaskbar: true,
-        launchOnStartup: true,
+        launchOnStartup: false,
         showRecentPushesOnStartup: true,
         enableSound: true,
         snoozeNotifications: false
@@ -316,7 +325,7 @@ const defaultSettings = {
             x: 100,
             y: 100,
             width: 400,
-            height: 598
+            height: 550
         },
         notificationFile: path.join(appSoundDirectory, 'notification-default.wav'),
         logFile: path.join(appLogDirectory, appProductName + '.log')
@@ -484,15 +493,17 @@ app.on('ready', () => {
 
     // Create the browser window.
     mainWindow = new BrowserWindow({
-        backgroundColor: '#ECF0F0',
-        minHeight: 400,
-        minWidth: 400,
-        frame: ( platformHelper.isMacOS || platformHelper.isWindows ) ? false : true,
+        backgroundColor: '#ECF0F0',  
+        minWidth: 256,
+        minHeight: 512,
+        frame: ( platformHelper.isMacOS ) ? false : true,
         icon: appIcon,
         title: appProductName,
         show: false,
         titleBarStyle: platformHelper.isMacOS ? 'hidden-inset' : 'default',
-        fullscreenable: false,
+        autoHideMenuBar: true,
+        thickFrame: true,
+        fullscreenable: true,
         webPreferences: {
             nodeIntegration: true,
             allowDisplayingInsecureContent: true,
@@ -535,7 +546,7 @@ app.on('ready', () => {
     mainPage.on('dom-ready', () => {
         mainWindow.show();
 
-        if (process.env['DEBUG']) {
+        if (debugMode) {
             mainPage.openDevTools();
         }
     });
