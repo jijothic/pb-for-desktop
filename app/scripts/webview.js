@@ -60,7 +60,7 @@ const connectClient = require('electron-connect').client;
  */
 let body = document.getElementsByTagName('body')[0],
     webview = document.getElementById('webview'),
-    overlay = document.getElementById('overlay-spinner'),
+    overlaySpinner = document.getElementById('overlay-spinner'),
     overlayControls = document.getElementById('overlay-controls'),
     overlayControlsHome = document.getElementById('overlay-controls-home');
 
@@ -71,6 +71,10 @@ let body = document.getElementsByTagName('body')[0],
  */
 let logDefault = console.log;
 console.debug = function() {
+    if (!debugMode) {
+        return;
+    }
+    
     let self = this,
         packageName = packageJson.name.toUpperCase(),
         messageList = Array.from(arguments),
@@ -106,7 +110,8 @@ console.debug = function() {
  */
 webview.addEventListener('did-finish-load', () => {
 
-    overlay.classList.add('hidden');
+    // Hide Spinner
+    overlaySpinner.classList.add('hide');
 
     // macOS Title Bar
     if (platformHelper.isMacOS) {
@@ -134,7 +139,7 @@ webview.addEventListener('new-window', (ev) => {
     }
 
     // DEBUG
-    // console.debug('Event', 'new-window', ev.url);
+    console.debug('Event', 'new-window', ev.url);
 });
 
 
@@ -146,15 +151,16 @@ webview.addEventListener('load-commit', (ev) => {
     let host = url.parse(ev.url).hostname;
 
     // DEBUG
-    // console.debug('[Event]', 'will-navigate', host);
+    console.debug('[Event]', 'will-navigate', host);
 
     switch (host) {
         case 'accounts.google.com':
+        case 'accounts.youtube.com':
         case 'www.facebook.com':
-            overlayControls.classList.remove('hidden');
+            overlayControls.classList.add('show');
             break;
         default:
-            overlayControls.classList.add('hidden');
+            overlayControls.classList.remove('show');
     }
 });
 

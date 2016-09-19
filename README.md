@@ -8,7 +8,9 @@ Receive native push notifications on macOS, Windows and Linux.
 ------
 ![Screenshot: Pushbullet for Desktop (macOS)](screenshot-macos.png)
 
-![Screenshot: Pushbullet for Desktop (Windows)](screenshot-windows.png) 
+![Screenshot: Pushbullet for Desktop (Windows)](screenshot-windows.png)
+
+![Screenshot: Pushbullet for Desktop (Linux)](screenshot-linux.png)
 
 ------
 
