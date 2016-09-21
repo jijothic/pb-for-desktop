@@ -1,6 +1,7 @@
 'use strict';
 
 
+
 /**
  * Modules: Node
  * @global
@@ -10,13 +11,11 @@ const path = require('path'),
     url = require('url');
 
 
-
 /**
  * @global
  * @constant
  */
 const moduleRoot = path.join(__dirname, '..');
-
 
 
 /**
@@ -27,14 +26,12 @@ const moduleRoot = path.join(__dirname, '..');
 const debugMode = process.env['DEBUG'];
 
 
-
 /**
  * Modules: Internal
  * @global
  */
 const packageJson = require(path.join(moduleRoot, 'package.json')),
     platformHelper = require(path.join(moduleRoot, 'lib', 'platform-helper'));
-
 
 
 //noinspection NpmUsedModulesInstalled
@@ -46,24 +43,36 @@ const electron = require('electron');
 const { ipcRenderer, remote } = electron;
 
 
-
 /**
  * Modules: Third Party
  * @global
  */
-const connectClient = require('electron-connect').client;
+const livereloadClient = require('electron-connect').client;
 
 
 
 /**
- * Init
+ * DOM Components
  */
-let body = document.getElementsByTagName('body')[0],
-    webview = document.getElementById('webview'),
-    overlaySpinner = document.getElementById('overlay-spinner'),
-    overlayControls = document.getElementById('overlay-controls'),
-    overlayControlsHome = document.getElementById('overlay-controls-home');
+let webview = document.getElementById('webview'),
+    spinner = document.getElementById('spinner'),
+    controls = document.getElementById('controls'),
+    buttons = {
+        home: {
+            target: document.querySelector('.controls__button.home'),
+            event() { webview.goBack(); }
+        }
+    };
 
+
+/**
+ * DOM Controls
+ */
+let registerButtons = function() {
+        for (let i in buttons) {
+            buttons[i].target.addEventListener('click', buttons[i].event);
+        }
+    };
 
 
 /**
@@ -74,7 +83,7 @@ console.debug = function() {
     if (!debugMode) {
         return;
     }
-    
+
     let self = this,
         packageName = packageJson.name.toUpperCase(),
         messageList = Array.from(arguments),
@@ -104,24 +113,25 @@ console.debug = function() {
 };
 
 
-
 /**
- * Event: did-finish-load
+ * @listens webview:did-finish-load
  */
 webview.addEventListener('did-finish-load', () => {
 
+    // Init Controls
+    registerButtons();
+
     // Hide Spinner
-    overlaySpinner.classList.add('hide');
+    spinner.classList.add('hide');
 
     // macOS Title Bar
     if (platformHelper.isMacOS) {
         webview.classList.add('padding-titlebar');
     }
 
-
     // DEBUG
     if (debugMode) {
-        connectClient.create();
+        livereloadClient.create();
         webview.openDevTools();
     }
 });
@@ -129,7 +139,7 @@ webview.addEventListener('did-finish-load', () => {
 
 
 /**
- * Event: new-window
+ * @listens webview:new-window
  */
 webview.addEventListener('new-window', (ev) => {
     let protocol = url.parse(ev.url).protocol;
@@ -145,30 +155,21 @@ webview.addEventListener('new-window', (ev) => {
 
 
 /**
- * Event: will-navigate
+ * @listens webview:will-navigate
  */
 webview.addEventListener('load-commit', (ev) => {
-    let host = url.parse(ev.url).hostname;
+    let hostname = url.parse(ev.url).hostname;
 
-    // DEBUG
-    console.debug('[Event]', 'will-navigate', host);
-
-    switch (host) {
+    switch (hostname) {
         case 'accounts.google.com':
         case 'accounts.youtube.com':
         case 'www.facebook.com':
-            overlayControls.classList.add('show');
+            controls.classList.add('show');
             break;
         default:
-            overlayControls.classList.remove('show');
+            controls.classList.remove('show');
     }
-});
 
-
-
-/**
- * Event: click
- */
-overlayControlsHome.addEventListener('click', () => {
-    webview.goBack();
+    // DEBUG
+    // console.debug('Event', 'will-navigate', hostname);
 });

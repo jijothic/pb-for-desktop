@@ -1,4 +1,4 @@
-# PB for Desktop [![Chat](https://badges.gitter.im/sidneys/pb-for-desktop.svg)](https://gitter.im/sidneys/pb-for-desktop)[![macOS + Linux Build Status](http://img.shields.io/travis/sidneys/pb-for-desktop.svg?style=flat)](http://travis-ci.org/sidneys/pb-for-desktop)[![Windows Build Status](https://ci.appveyor.com/api/projects/status/d69sb6iav7tnrldq?svg=true)](https://ci.appveyor.com/project/sidneys/pb-for-desktop)
+# PB for Desktop [![Node Package Version](https://img.shields.io/npm/v/pb-for-desktop.svg?style=flat)](https://npmjs.com/package/pb-for-desktop) [![Contributions Welcome](https://img.shields.io/badge/contributions-wanted-red.svg?style=flat)](https://github.com/sidneys/pb-for-desktop/issues) [![Chat](https://badges.gitter.im/sidneys/pb-for-desktop.svg)](https://gitter.im/sidneys/pb-for-desktop) [![macOS + Linux Build Status](http://img.shields.io/travis/sidneys/pb-for-desktop.svg?style=flat)](http://travis-ci.org/sidneys/pb-for-desktop) [![Windows Build Status](https://ci.appveyor.com/api/projects/status/d69sb6iav7tnrldq?svg=true)](https://ci.appveyor.com/project/sidneys/pb-for-desktop)   
 
 **PB for Desktop** is a lightweight cross-platform desktop client for [PushBullet](https://pushbullet.com/).
 Receive native push notifications on macOS, Windows and Linux.
@@ -6,11 +6,11 @@ Receive native push notifications on macOS, Windows and Linux.
 *Not affiliated with PushBullet Inc..*
 
 ------
-![Screenshot: Pushbullet for Desktop (macOS)](screenshot-macos.png)
+![Screenshot: Pushbullet for Desktop (macOS)](https://raw.githubusercontent.com/sidneys/pb-for-desktop/release/screenshot-macos.png)
 
-![Screenshot: Pushbullet for Desktop (Windows)](screenshot-windows.png)
+![Screenshot: Pushbullet for Desktop (Windows)](https://raw.githubusercontent.com/sidneys/pb-for-desktop/release/screenshot-windows.png)
 
-![Screenshot: Pushbullet for Desktop (Linux)](screenshot-linux.png)
+![Screenshot: Pushbullet for Desktop (Linux)](https://raw.githubusercontent.com/sidneys/pb-for-desktop/release/screenshot-linux.png)
 
 ------
 
@@ -21,7 +21,13 @@ Receive native push notifications on macOS, Windows and Linux.
 > **Native Notifications**
 >
 
-Uses the macOS Notification Center and the Windows 10 Action Center.
+Uses the macOS [Notification Center](https://en.wikipedia.org/wiki/Notification_Center), the Windows 10 [Action Center](https://en.wikipedia.org/wiki/Action_Center) and [libnotify](https://launchpad.net/ubuntu/+source/libnotify) for Linux.
+
+>
+> **Cross-Platform**
+>
+
+Tested on macOS (10.11, 10.12), Windows 10 (Anniversary Update) and Debian Linux (Ubuntu 16.04, elementary OS 0.4)
 
 >
 > **Unobstrusive**
@@ -55,10 +61,16 @@ Preview thumbnails for pushes containing images.
 Use the default Pushbullet sound or one of your choice.
 
 >
-> **Notification Emoji** 👾
+> **Notification Emoji** [![Feature Status: Beta](https://img.shields.io/badge/status-beta-blue.svg?style=flat)]()
 >
 
-Use tags to add emoji to notifications (example: add  `{video}` to show a 📺 emoji with every notification).
+Use tags to add emoji to notifications, e.g.: add  `{video}` to show a 📺 with every notification.
+
+>
+> **Notification Mirroring** [![Feature Status: Beta](https://img.shields.io/badge/status-beta-blue.svg?style=flat)]()
+>
+
+Mirror Android notifications via [Pushbullet for Android](https://play.google.com/store/apps/details?id=com.pushbullet.android).
 
 ------
 
@@ -87,12 +99,17 @@ Use tags to add emoji to notifications (example: add  `{video}` to show a 📺 e
 
 Download the latest version on the [Releases page](https://github.com/sidneys/pb-for-desktop/releases).
 
-### <a name="commandline"/></a>Commandline
+### <a name="commandline"/></a>Commandline Package
 
-Install the package globally, then run it:
+To use PB for Desktop from the commandline, install it globally:
 
 ```bash
 npm install --global pb-for-desktop
+```
+
+To run it, launch `pb-for-desktop`:
+
+```bash
 pb-for-desktop
 ```
 
@@ -190,6 +207,7 @@ A build and deployment cycle is comprised of several steps:
 ## <a name="roadmap"/></a>Roadmap
 
 - [ ] In-App-Updates (via Squirrel / Heroku /  GitHub)
+- [ ] SMS for Android
 - [ ] Signed binaries for macOS and Windows 10
 - [ ] E2E tests via [Spectron](https://github.com/electron/spectron)
 

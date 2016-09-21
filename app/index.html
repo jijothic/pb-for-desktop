@@ -7,15 +7,20 @@
 </head>
 <body>
 
-    <div id="overlay-spinner">
-        <div id="overlay-spinner-logo"></div>
+    <div id="spinner">
+        <div id="spinner__logo"></div>
+        <div id="spinner__icon"></div>
     </div>
 
-    <div id="overlay-controls">
-        <div id="overlay-controls-home">
+    <div id="controls">
+        <div class="controls__button home">
             <div class="title">Home</div>
             <i class="icon ion-home"></i>
         </div>
+    </div>
+
+    <div id="titlebar"
+         class="draggable">
     </div>
 
     <webview id="webview"
@@ -28,9 +33,8 @@
              allowpopups="on">
     </webview>
 
-    <div id="titlebar-background"
-         class="draggable">
-    </div>
+
+
     <script src="./scripts/webview.js"></script>
 
 </body>

@@ -251,8 +251,15 @@ let getIconForPushbulletPush = function(push) {
         }
     }
 
+    // Mirroring
+    let dataUrl;
+    if (push['type'] === 'mirror') {
+        dataUrl = 'data:image/jpeg;base64,' + push.icon;
+    }
+
+
     // Fallback
-    imageUrl = channelImage || deviceImage || accountImage;
+    imageUrl = dataUrl || channelImage || deviceImage || accountImage;
 
     return imageUrl;
 };
@@ -264,15 +271,22 @@ let getIconForPushbulletPush = function(push) {
  */
 Notification = function(pushTitle, pushObject) {
 
-    /** Pre-populate Push Attributes
+    /**
+     * Notification attributes
      */
     let push = pushObject || NotificationDefaults.push,
+        iden = push['iden'],
         type = push['type'] || NotificationDefaults.type,
         title = push['title'] || pushTitle || push['body'] || NotificationDefaults.title,
         body = push['body'] || push['title'] || NotificationDefaults.body,
         url = NotificationDefaults.url,
-        icon = getIconForPushbulletPush(push) || NotificationDefaults.ICON,
-        iden = push['iden'];
+        icon = getIconForPushbulletPush(push) || NotificationDefaults.ICON;
+
+    /**
+     *  Notification buttons
+     */
+    // TODO
+    // let buttons = [] ;
 
     /** Determine Push Type
      * @see {@link https://docs.pushbullet.com/#push|Pushbullet API}
@@ -289,6 +303,12 @@ Notification = function(pushTitle, pushObject) {
         case 'file':
             title = title || push['file_name'];
             body = body || push['file_type'];
+            url = push['file_url'];
+            icon = push['image_url'] || icon;
+            break;
+        case 'mirror':
+            title = pushObject.application_name + ': ' + (pushObject.title || '');
+            body = body || push['title'];
             url = push['file_url'];
             icon = push['image_url'] || icon;
             break;
@@ -320,8 +340,6 @@ Notification = function(pushTitle, pushObject) {
                             if (err) {
                                 return console.debug('playSoundFile Error', file);
                             }
-                            // DEBUG
-                            // return console.debug('playSoundFile]');
                         });
                     });
             }
@@ -334,7 +352,6 @@ Notification = function(pushTitle, pushObject) {
 
     // DEBUG
     console.debug('Notification', '"' + notification.title + '"');
-    console.debug('Notification', 'Created:', getFormattedDate(pushObject.created), '(Modified: ' + getFormattedDate(pushObject.modified) + ')');
 
     return notification;
 };
@@ -353,7 +370,10 @@ window.showNotification = function(push) {
     electronSettings.get('user.snoozeNotifications')
         .then(snoozeNotifications => {
             if (!snoozeNotifications) {
-                if (push.active && push.active === true) {
+                if (
+                    (push.active && push.active === true) ||
+                    (push.type && push.type === 'mirror')
+                ) {
                     return new Notification(null, push);
                 }
             }
@@ -394,7 +414,7 @@ window.enqueuePushes = function(pushes, cb) {
                 let notificationTimeout = setTimeout(function() {
 
                     // Show local notification
-                    window.showNotification(push, notifyAfter);
+                    window.showNotification(push);
 
                     // Update 'internal.lastNotification' with timestamp from most recent push
                     if (push.modified > notifyAfter) {
@@ -426,6 +446,7 @@ window.enqueueRecentPushes = function(cb) {
 
     window.enqueuePushes(pushesList, function(length) {
         callback(length);
+
         // DEBUG
         console.debug('window.enqueueNewPushes', 'callback');
     });
@@ -448,7 +469,7 @@ window.enqueueSinglePush = function(pushObject, cb) {
         callback(length);
 
         // DEBUG
-        console.debug('window.enqueueNewPushes', 'callback');
+        console.debug('window.enqueueSinglePush', 'pushObject');
     });
 };
 
@@ -470,6 +491,7 @@ window.onload = function() {
             window.createWebsocketProxy();
             window.createErrorProxy();
             window.createPushProxy();
+            window.createWebsocketListener();
 
             // Show recent pushes manually on load
             electronSettings.get('user.showRecentPushesOnStartup')
@@ -507,6 +529,7 @@ window.optimizeMenu = function() {
     window.pb.sidebar.update();
     window.onecup['goto']('/#people');
 
+    // DEBUG
     console.debug('window.optimizeMenu');
 };
 
@@ -576,6 +599,48 @@ window.createPushProxy = function() {
             }
         }
     });
+
+    // DEBUG
+    console.debug('Proxy created', 'window.pb.api.pushes.objs');
+};
+
+
+/**
+ * Listen for Pushbullet Stream
+ */
+window.createWebsocketListener = function() {
+
+    window.pb.ws.socket.onmessage = function(ev) {
+        let message;
+
+        try {
+            message = JSON.parse(ev.data);
+        } catch (err) {
+            console.debug('messageObject', err);
+        }
+
+        let messageType = message.type,
+            pushObject = message.push;
+
+        if (!pushObject || messageType !== 'push') {
+            return;
+        }
+
+        if (pushObject.type && pushObject.type === 'mirror') {
+            window.showNotification(pushObject);
+        }
+
+        if (pushObject.type && pushObject.type === 'dismissal') {
+            // TODO: Implement mirror dismissals
+        }
+
+        // DEBUG
+        console.debug('Event', 'window.pb.ws.socket.onmessage', 'messageType', messageType);
+        console.debug('Event', 'window.pb.ws.socket.onmessage', 'pushObject.type', pushObject.type);
+    };
+
+    // DEBUG
+    console.debug('Add Event Listener', 'window.pb.ws.socket', 'onmessage');
 };
 
 
@@ -630,7 +695,8 @@ window.getPushes = function(limit) {
  * Add native context menus
  */
 window.addEventListener('contextmenu', ev => {
-    console.debug('Event', 'window', 'contextmenu');
+    // DEBUG
+    console.debug('Add Event Listener', 'window', 'contextmenu');
 
     if (!ev.target['closest']('textarea, input, [contenteditable="true"]')) {
         return;

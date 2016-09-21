@@ -1,11 +1,13 @@
 'use strict';
 
 
+
 /**
  * Modules: Node
  * @global
  */
 const path = require('path');
+
 
 /**
  * Modules: Internal
@@ -14,12 +16,24 @@ const path = require('path');
 const moduleRoot = path.join(__dirname),
     packageJson = require(path.join(moduleRoot, 'package.json'));
 
+
 /**
  * Modules: Third Party
  * @global
  */
 const gulp = require('gulp'),
-    connectServer = require('electron-connect').server.create({ useGlobalElectron: true, verbose: true });
+    livereloadServer = require('electron-connect').server;
+
+
+/**
+ * @global
+ * @default
+ */
+const livereloadSettings = {
+        useGlobalElectron: true,
+        verbose: false
+    };
+
 
 /**
  * Files
@@ -42,21 +56,23 @@ const mainProcessFiles = [
 
 
 gulp.task('serve', function() {
-    connectServer.start();
+
+    // Create server
+    livereloadServer.create(livereloadSettings).start();
 
     // Restart main process
-    gulp.watch(mainProcessFiles, connectServer.restart);
+    gulp.watch(mainProcessFiles, livereloadServer.restart);
 
     // Reload renderer process
-    gulp.watch(rendererProcessFiles, connectServer.reload);
+    gulp.watch(rendererProcessFiles, livereloadServer.reload);
 });
 
 gulp.task('reload:main', function() {
-    connectServer.restart();
+    livereloadServer.restart();
 });
 
 gulp.task('reload:renderer', function() {
-    connectServer.reload();
+    livereloadServer.reload();
 });
 
 gulp.task('default', ['serve']);

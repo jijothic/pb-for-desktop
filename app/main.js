@@ -493,7 +493,7 @@ app.on('ready', () => {
 
     // Create the browser window.
     mainWindow = new BrowserWindow({
-        backgroundColor: '#ECF0F0',  
+        backgroundColor: '#4AB367',
         minWidth: 256,
         minHeight: 512,
         frame: ( platformHelper.isMacOS ) ? false : true,
