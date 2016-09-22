@@ -1,9 +1,12 @@
-os:
-  - osx
-
-osx_image: xcode7.3
-
-sudo: required
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode8
+      sudo: required
+    - os: linux
+      dist: trusty
+      sudo: required
+      compiler: clang
 
 language: c
 
@@ -11,11 +14,9 @@ branches:
   only:
     - release
 
-git:
-  depth: 5
-
 env:
-   - ARTIFACTS_DIRECTORY="build/release/"
+  global:
+    - ARTIFACTS_DIRECTORY="build/release/"
 
 cache:
   directories:
@@ -25,26 +26,20 @@ cache:
 before_install:
   - curl -o- https://raw.githubusercontent.com/creationix/nvm/master/install.sh | NVM_DIR=$HOME/.nvm sh
   - source $HOME/.nvm/nvm.sh
-  - command -v nvm
   - nvm install 6.6.0
   - nvm use 6.6.0
-  - rvm use ruby-2.0.0-p648
 
 install:
-  - brew update || true
-  - brew install dpkg fakeroot || true
-  - dpkg --version; fakeroot -v
+  - npm install
 
 before_script:
-  - npm install
   - npm prune
 
 script:
-  - npm run build darwin
-  - npm run build linux
+  - echo "Deploying artifacts from $ARTIFACTS_DIRECTORY"
+  - npm run build $TRAVIS_OS_NAME
 
 after_success:
-  - echo "Deploying artifacts from $ARTIFACTS_DIRECTORY"
   - npm run-script deploy-github
 
 notifications:
@@ -54,11 +49,3 @@ notifications:
     on_success: change
     on_failure: always
     on_start: never
-
-deploy:
-  provider: heroku
-  api_key:
-    secure: oaIqGZR7TnflEH+v+QU+D2RHdNdBYB4A7n6gjpR4cqQKw3TZsuHo9LbKZHDenb5Y5hhQiaoTej91HiBFxltoW7L6A+6I2eqj8I1+A5/FfASNUZERfk3VpDMWROILzRjE1pSnvCdasV9iquJhC3GaMPt/fXZHNh+P4ErcDX1xXl+K0Gdt/Ih2HzNIvVk6Xq8QzsVo2jlicR8VgAnGFZBM+/EBEDcNgLpMmiNJWxAoQWewMNilz6LpR400X4MlMG7RAF+tuXwq7/c/plsaZt0/zpWsSw2ZJVWNzN8CtZulTmYtFTugp69oz1GxLUUgm+OyO9rz8TS5SIv3BbUKLc8L74XYJbMCpR+goqa4mPJKT3uX7dIHjkLmzBvoRilUulSorUxkd8IxdINslGzzDNPtqdZZTGwx850/FFb7FBGnR5ShdIgUL8LAjGr/IkfrcFyyTvQMTRln1IWWSUDS4Mj0uflmeuhVkD5eUPn6QZFSlWK6TxMngjEzwLOPIFAPXAPT/3BMtcuijyY6fbr76bcU7yCDSVEstf6KfufOtJ0utpWTaguDLo3lGR7Vdjhg0MIBiffkIRBg4Z+i4k3zjXjdHd3c7Sfaf9rBvzeQfSOnpOOripUBtMPC6nqgOQZEsAFpVp443n3UUh049dsbNJJWfGfXtQzdATWmtum8GG/8ufk=
-  app: pb-for-desktop
-  on:
-    all_branches: true
