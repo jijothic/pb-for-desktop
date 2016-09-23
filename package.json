@@ -1,7 +1,7 @@
 {
   "name": "pb-for-desktop",
   "productName": "PB for Desktop",
-  "version": "2.2.5",
+  "version": "2.3.0",
   "description": "PB for Desktop is a lightweight Pushbullet client for macOS, Windows and Linux.",
   "license": "MIT",
   "homepage": "https://sidneys.github.io/pb-for-desktop",
@@ -27,6 +27,7 @@
     "pushes",
     "notification",
     "chrome",
+    "safari",
     "desktop",
     "electron",
     "mac",

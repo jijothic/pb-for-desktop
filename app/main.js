@@ -76,7 +76,7 @@ const appUrl = 'file://' + moduleRoot + '/app/index.html',
     appTrayIconDefault = path.join(moduleRoot, 'icons', platformHelper.type, 'icon-tray' + platformHelper.imageExtension(platformHelper.type)),
     appSoundDirectory = path.join(moduleRoot, 'sounds'),
     appLogDirectory = (new AppDirectory(appName)).userLogs(),
-    appLauncher =  debugMode ? new AutoLaunch({ name: appName }) : void 0;
+    appLauncher =  (new AutoLaunch({ name: appName }));
 
 
 /**
@@ -496,7 +496,7 @@ app.on('ready', () => {
         backgroundColor: '#4AB367',
         minWidth: 256,
         minHeight: 512,
-        frame: ( platformHelper.isMacOS ) ? false : true,
+        frame: platformHelper.isMacOS ? false : true,
         icon: appIcon,
         title: appProductName,
         show: false,
@@ -539,6 +539,7 @@ app.on('ready', () => {
     mainPage.on('will-navigate', (event, url) => {
         event.preventDefault();
         if (url) {
+            //noinspection JSCheckFunctionSignatures
             shell.openExternal(url);
         }
     });
